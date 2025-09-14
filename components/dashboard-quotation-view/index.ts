@@ -1,0 +1,11 @@
+export { default as QuotationHeader } from './QuotationHeader';
+export { default as QuotationHero } from './QuotationHero';
+export { default as QuotationCTA } from './QuotationCTA';
+export { default as FloatingWhatsApp } from './FloatingWhatsApp';
+export { default as OverviewTab } from './OverviewTab';
+export { default as FeaturesBenefitsTab } from './FeaturesBenefitsTab';
+export { default as PricingTimelineTab } from './PricingTimelineTab';
+export { default as ProcessWorkflowTab } from './ProcessWorkflowTab';
+export { default as TestimonialsPortfolioTab } from './TestimonialsPortfolioTab';
+export { default as TermsConditionsTab } from './TermsConditionsTab';
+export { default as ProcessVideoWidget } from './ProcessVideoWidget';

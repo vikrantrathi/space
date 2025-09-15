@@ -4,6 +4,15 @@ import Quotation from '../../../../../lib/db/models/Quotation';
 import Activity from '../../../../../lib/db/models/Activity';
 import { authMiddleware } from '../../../../../lib/auth/auth-middleware';
 
+interface AuthenticatedRequest extends NextRequest {
+  user: {
+    userId: string;
+    email: string;
+    name?: string;
+    role: string;
+  };
+}
+
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
@@ -23,7 +32,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     try {
       const authResult = authMiddleware(request);
       if (!authResult) {
-        user = (request as any).user;
+        user = (request as AuthenticatedRequest).user;
         isAuthenticated = true;
       }
     } catch (error) {

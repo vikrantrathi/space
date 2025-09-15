@@ -31,20 +31,36 @@ export async function GET(request: NextRequest) {
       .populate('associatedUser', 'name email')
       .sort({ createdAt: -1 });
 
-    // Get view counts for each quotation
-    const quotationsWithViews = await Promise.all(
-      quotations.map(async (quotation) => {
-        const viewCount = await Activity.countDocuments({
+    // Get all quotation IDs for efficient view count query
+    const quotationIds = quotations.map(q => q._id.toString());
+    
+    // Get view counts for all quotations in a single aggregation query
+    const viewCounts = await Activity.aggregate([
+      {
+        $match: {
           type: 'quotation_viewed',
-          'metadata.quotationId': quotation._id.toString()
-        });
-        
-        return {
-          ...quotation.toObject(),
-          viewCount
-        };
-      })
-    );
+          'metadata.quotationId': { $in: quotationIds }
+        }
+      },
+      {
+        $group: {
+          _id: '$metadata.quotationId',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // Create a map for quick lookup
+    const viewCountMap = new Map();
+    viewCounts.forEach(item => {
+      viewCountMap.set(item._id, item.count);
+    });
+
+    // Combine quotations with their view counts
+    const quotationsWithViews = quotations.map(quotation => ({
+      ...quotation.toObject(),
+      viewCount: viewCountMap.get(quotation._id.toString()) || 0
+    }));
 
     return NextResponse.json({ quotations: quotationsWithViews });
   } catch (error) {

@@ -161,10 +161,13 @@ const AdminQuotationsView: React.FC = () => {
           'Authorization': `Bearer ${token}`
         }
       });
+      
       if (response.ok) {
         const data = await response.json();
-        setQuotations(data.quotations);
+        setQuotations(data.quotations || []);
       } else {
+        const errorData = await response.json().catch(() => ({}));
+        
         notification.error({
           message: 'Failed to Fetch Quotations',
           description: 'Unable to load quotation data. Please try again.',

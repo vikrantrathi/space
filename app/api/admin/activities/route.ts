@@ -25,9 +25,18 @@ export async function GET(request: NextRequest) {
       'metadata.quotationId'?: string;
       createdAt?: { $gte?: Date; $lte?: Date };
       $or?: Array<{ description?: { $regex: string; $options: string } } | { userEmail?: { $regex: string; $options: string } }>;
+      $and?: Array<{ type?: { $ne: string } }>;
     } = {};
 
-    if (type) query.type = type;
+    // Always exclude quotation_viewed logs unless specifically requested
+    if (type === 'quotation_viewed') {
+      query.type = type;
+    } else {
+      // Exclude quotation_viewed logs by default
+      query.$and = [{ type: { $ne: 'quotation_viewed' } }];
+      if (type) query.type = type;
+    }
+    
     if (userId) query.userId = userId;
     if (quotationId) query['metadata.quotationId'] = quotationId;
     if (startDate || endDate) {

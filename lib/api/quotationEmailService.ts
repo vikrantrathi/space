@@ -35,7 +35,8 @@ export class QuotationEmailService {
 
   private static getQuotationLink(quotation: IQuotation): string {
     const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-    return `${baseUrl}/quotation/${quotation._id}`;
+    const quotationId = quotation._id?.toString() || quotation._id;
+    return `${baseUrl}/quotation/${quotationId}`;
   }
 
   static async sendQuotationSentEmail(data: QuotationEmailData): Promise<boolean> {
@@ -45,13 +46,13 @@ export class QuotationEmailService {
       const quotationLink = this.getQuotationLink(data.quotation);
 
       const templateData = {
-        clientName: data.clientName,
-        quotationTitle: quotationDetails.title,
-        quotationNumber: quotationDetails.number,
-        validUntil: quotationDetails.validUntil,
-        totalAmount: quotationDetails.totalAmount,
-        quotationLink,
-        companyName: company.name,
+        '{{clientName}}': data.clientName,
+        '{{quotationTitle}}': quotationDetails.title,
+        '{{quotationNumber}}': quotationDetails.number,
+        '{{validUntil}}': quotationDetails.validUntil,
+        '{{totalAmount}}': quotationDetails.totalAmount,
+        '{{quotationLink}}': quotationLink,
+        '{{companyName}}': company.name,
       };
 
       await sendEmailTemplate({
@@ -73,11 +74,11 @@ export class QuotationEmailService {
       const quotationDetails = this.getQuotationDetails(data.quotation);
 
       const templateData = {
-        clientName: data.clientName,
-        quotationTitle: quotationDetails.title,
-        quotationNumber: quotationDetails.number,
-        totalAmount: quotationDetails.totalAmount,
-        companyName: company.name,
+        '{{clientName}}': data.clientName,
+        '{{quotationTitle}}': quotationDetails.title,
+        '{{quotationNumber}}': quotationDetails.number,
+        '{{totalAmount}}': quotationDetails.totalAmount,
+        '{{companyName}}': company.name,
       };
 
       await sendEmailTemplate({
@@ -99,11 +100,11 @@ export class QuotationEmailService {
       const quotationDetails = this.getQuotationDetails(data.quotation);
 
       const templateData = {
-        clientName: data.clientName,
-        quotationTitle: quotationDetails.title,
-        rejectionReason: data.reason || 'No reason provided',
-        companyEmail: company.email,
-        companyName: company.name,
+        '{{clientName}}': data.clientName,
+        '{{quotationTitle}}': quotationDetails.title,
+        '{{rejectionReason}}': data.reason || 'No reason provided',
+        '{{companyEmail}}': company.email,
+        '{{companyName}}': company.name,
       };
 
       await sendEmailTemplate({
@@ -125,11 +126,11 @@ export class QuotationEmailService {
       const quotationDetails = this.getQuotationDetails(data.quotation);
 
       const templateData = {
-        clientName: data.clientName,
-        quotationTitle: quotationDetails.title,
-        revisionReason: data.reason || 'No reason provided',
-        companyEmail: company.email,
-        companyName: company.name,
+        '{{clientName}}': data.clientName,
+        '{{quotationTitle}}': quotationDetails.title,
+        '{{revisionReason}}': data.reason || 'No reason provided',
+        '{{companyEmail}}': company.email,
+        '{{companyName}}': company.name,
       };
 
       await sendEmailTemplate({
@@ -152,13 +153,13 @@ export class QuotationEmailService {
       const quotationLink = this.getQuotationLink(data.quotation);
 
       const templateData = {
-        clientName: data.clientName,
-        quotationTitle: quotationDetails.title,
-        quotationNumber: quotationDetails.number,
-        validUntil: quotationDetails.validUntil,
-        totalAmount: quotationDetails.totalAmount,
-        quotationLink,
-        companyName: company.name,
+        '{{clientName}}': data.clientName,
+        '{{quotationTitle}}': quotationDetails.title,
+        '{{quotationNumber}}': quotationDetails.number,
+        '{{validUntil}}': quotationDetails.validUntil,
+        '{{totalAmount}}': quotationDetails.totalAmount,
+        '{{quotationLink}}': quotationLink,
+        '{{companyName}}': company.name,
       };
 
       await sendEmailTemplate({

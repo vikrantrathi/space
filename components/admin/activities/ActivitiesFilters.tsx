@@ -80,7 +80,6 @@ const ActivitiesFilters: React.FC<ActivitiesFiltersProps> = ({
               { value: 'email_sent', label: 'Email Sent' },
               { value: 'password_reset', label: 'Password Reset' },
               { value: 'admin_action', label: 'Admin Action' },
-              { value: 'quotation_viewed', label: 'Quotation Viewed' },
               { value: 'quotation_action', label: 'Quotation Action' },
             ]}
           />

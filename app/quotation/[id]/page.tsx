@@ -74,13 +74,10 @@ const QuotationPage: React.FC = () => {
           'Content-Type': 'application/json',
           ...headers
         },
-        body: JSON.stringify({
-          isAuthenticated,
-          userEmail: user?.email || null,
-          userName: user?.name || null
-        })
+        body: JSON.stringify({}) // Empty body since auth is handled server-side
       });
     } catch (error) {
+      console.error('Error tracking quotation view:', error);
       // Silently fail - don't interrupt user experience
     }
   };

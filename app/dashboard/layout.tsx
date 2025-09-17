@@ -18,6 +18,7 @@ import {
 import { useAuth } from '../../lib/auth/auth-context';
 import { useTheme } from '@/components/providers/ThemeProvider';
 import { useGlobalLoader } from '@/components/shared/GlobalLoader';
+import Breadcrumb from '@/components/shared/Breadcrumb';
 import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -37,6 +38,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isClientMounted, setIsClientMounted] = useState(false);
+  const [openKeys, setOpenKeys] = useState<string[]>([]);
   const pathname = usePathname();
   const router = useRouter();
   const { token } = theme.useToken();
@@ -73,6 +75,65 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, [isClientMounted]);
+
+  // Function to determine the active menu key and open keys based on the current path
+  const getMenuState = (pathname: string): { selectedKeys: string[], openKeys: string[] } => {
+    // Direct matches first
+    if (pathname === '/dashboard' || pathname === '/dashboard/admin') {
+      return { selectedKeys: [pathname], openKeys: [] };
+    }
+    
+    // For sub-pages, find the parent menu key and handle sub-menus
+    if (pathname.startsWith('/dashboard/admin/quotations')) {
+      // For quotation sub-pages, show the parent quotations menu as active
+      return { selectedKeys: ['/dashboard/admin/quotations'], openKeys: [] };
+    }
+    if (pathname.startsWith('/dashboard/admin/users')) {
+      // For user sub-pages, show the parent users menu as active
+      return { selectedKeys: ['/dashboard/admin/users'], openKeys: [] };
+    }
+    if (pathname.startsWith('/dashboard/admin/activities')) {
+      // For activity sub-pages, show the parent activities menu as active
+      return { selectedKeys: ['/dashboard/admin/activities'], openKeys: [] };
+    }
+    if (pathname.startsWith('/dashboard/admin/settings')) {
+      // For settings sub-pages, show both the sub-menu item and parent as open
+      return { 
+        selectedKeys: [pathname], 
+        openKeys: ['/dashboard/admin/settings-menu'] 
+      };
+    }
+    if (pathname.startsWith('/dashboard/client/activities')) {
+      // For client activity sub-pages, show the parent activities menu as active
+      return { selectedKeys: ['/dashboard/client/activities'], openKeys: [] };
+    }
+    if (pathname.startsWith('/dashboard/client/quotations')) {
+      // For client quotation sub-pages, show the parent quotations menu as active
+      return { selectedKeys: ['/dashboard/client/quotations'], openKeys: [] };
+    }
+    if (pathname.startsWith('/dashboard/client/settings')) {
+      // For client settings sub-pages, show the parent settings menu as active
+      return { selectedKeys: ['/dashboard/client/settings'], openKeys: [] };
+    }
+    
+    // Fallback to exact match
+    return { selectedKeys: [pathname], openKeys: [] };
+  };
+
+  // Get menu state for current pathname
+  const menuState = getMenuState(pathname);
+  
+  // Update openKeys when pathname changes
+  useEffect(() => {
+    setOpenKeys(menuState.openKeys);
+  }, [pathname]);
+
+  // Handle menu item clicks - close sidebar on mobile
+  const handleMenuClick = () => {
+    if (isMobile) {
+      setCollapsed(true);
+    }
+  };
 
   // Show loading spinner during authentication check or if not authenticated
   if (isLoading || !isAuthenticated || !isClientMounted) {
@@ -111,22 +172,22 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
      {
        key: '/dashboard/admin',
        icon: <DashboardOutlined />,
-       label: <Link href="/dashboard/admin">Dashboard</Link>,
+       label: <Link href="/dashboard/admin" onClick={handleMenuClick}>Dashboard</Link>,
      },
      {
        key: '/dashboard/admin/users',
        icon: <UserOutlined />,
-       label: <Link href="/dashboard/admin/users">Users</Link>,
+       label: <Link href="/dashboard/admin/users" onClick={handleMenuClick}>Users</Link>,
      },
      {
        key: '/dashboard/admin/quotations',
        icon: <FileTextOutlined />,
-       label: <Link href="/dashboard/admin/quotations">Quotations</Link>,
+       label: <Link href="/dashboard/admin/quotations" onClick={handleMenuClick}>Quotations</Link>,
      },
      {
        key: '/dashboard/admin/activities',
        icon: <HistoryOutlined />,
-       label: <Link href="/dashboard/admin/activities">Activity Log</Link>,
+       label: <Link href="/dashboard/admin/activities" onClick={handleMenuClick}>Activity Log</Link>,
      },
      {
        key: '/dashboard/admin/settings-menu',
@@ -139,6 +200,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
            label: (
              <Link
                href="/dashboard/admin/settings"
+               onClick={handleMenuClick}
                style={{
                  fontSize: '13px',
                }}
@@ -153,6 +215,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
            label: (
              <Link
                href="/dashboard/admin/settings/email-templates"
+               onClick={handleMenuClick}
                style={{
                  fontSize: '13px',
                }}
@@ -167,17 +230,22 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
      {
        key: '/dashboard',
        icon: <DashboardOutlined />,
-       label: <Link href="/dashboard">Dashboard</Link>,
+       label: <Link href="/dashboard" onClick={handleMenuClick}>Dashboard</Link>,
      },
      {
        key: '/dashboard/client/quotations',
        icon: <FileTextOutlined />,
-       label: <Link href="/dashboard/client/quotations">Quotations</Link>,
+       label: <Link href="/dashboard/client/quotations" onClick={handleMenuClick}>Quotations</Link>,
+     },
+     {
+       key: '/dashboard/client/activities',
+       icon: <HistoryOutlined />,
+       label: <Link href="/dashboard/client/activities" onClick={handleMenuClick}>Activity Log</Link>,
      },
      {
        key: '/dashboard/client/settings',
        icon: <SettingOutlined />,
-       label: <Link href="/dashboard/client/settings">Settings</Link>,
+       label: <Link href="/dashboard/client/settings" onClick={handleMenuClick}>Settings</Link>,
      },
    ];
 
@@ -256,20 +324,36 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             padding: collapsed ? '0px 20px' : '0px 0px',
             textAlign: 'center',
             marginTop: collapsed ? '10px' : '-40px',
-            marginBottom: collapsed ? '15px' : '-30px'
+            marginBottom: collapsed ? '15px' : '-30px',
+            transition: 'all 0.3s ease-in-out'
           }}>
-            {collapsed ? (
-              <Image src="/s.png" alt="Logo" width={100} height={100} />
-            ) : (
-              <Image src="/PNG.webp" alt="Logo" width={200} height={100} />
-            )}
+            {/* Hide logo on mobile when sidebar is collapsed to prevent flash */}
+            {!isMobile && collapsed ? (
+              <Image 
+                src="/s.png" 
+                alt="Logo" 
+                width={100} 
+                height={100}
+                style={{ transition: 'all 0.3s ease-in-out' }}
+              />
+            ) : !collapsed ? (
+              <Image 
+                src="/PNG.webp" 
+                alt="Logo" 
+                width={200} 
+                height={100}
+                style={{ transition: 'all 0.3s ease-in-out' }}
+              />
+            ) : null}
           </div>
-          <Menu
-            theme="dark"
-            mode="inline"
-            selectedKeys={[pathname]}
-            items={menuItems}
-          />
+           <Menu
+             theme="dark"
+             mode="inline"
+             selectedKeys={menuState.selectedKeys}
+             openKeys={openKeys}
+             onOpenChange={setOpenKeys}
+             items={menuItems}
+           />
         </Sider>
         {isMobile && !collapsed && (
           <div
@@ -285,10 +369,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         <Layout style={{ marginLeft: isMobile ? 0 : (collapsed ? 80 : 200), marginTop: 64 }}>
           <Header
             style={{
-              padding: '0 24px',
+              padding: '0 12px',
               background: token.colorBgContainer,
               display: 'flex',
-              justifyContent: 'space-between',
               alignItems: 'center',
               position: 'fixed',
               top: 0,
@@ -296,15 +379,22 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               right: 0,
               zIndex: 1000,
             }}
+            className="px-3 md:px-6"
           >
             <Button
               type="text"
               icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
               onClick={() => setCollapsed(!collapsed)}
-              style={{ fontSize: '16px', width: 64, height: 64 ,marginLeft: -25}}
+              style={{ 
+                fontSize: '16px', 
+                width: 64, 
+                height: 64,
+                marginLeft: isMobile ? '-15px' : '-10px'
+              }}
             />
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <Text>Welcome, {user?.name}</Text>
+            <Breadcrumb />
+            <div className="flex items-center gap-2 md:gap-4 ml-auto">
+              <Text className="hidden sm:block">Welcome, {user?.name}</Text>
               <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
                 <Avatar
                   style={{ cursor: 'pointer' }}
@@ -314,7 +404,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               </Dropdown>
             </div>
           </Header>
-          <Content style={{ margin: '4px 6px 0', padding: 24, background: token.colorBgContainer, minHeight: 280 }}>
+          <Content style={{ margin: '4px 6px 0', padding: '12px', background: token.colorBgContainer, minHeight: 280 }} className="p-3 md:p-6">
             {children}
           </Content>
         </Layout>

@@ -9,14 +9,13 @@ import {
   Space,
   Button,
   Image,
-  message,
   Modal,
   Input,
-  Tooltip
+  Tooltip,
+  App
 } from 'antd';
 import {
   DownloadOutlined,
-  PrinterOutlined,
   ShareAltOutlined,
   GlobalOutlined,
   PhoneFilled,
@@ -24,6 +23,8 @@ import {
   CopyOutlined,
   LinkOutlined
 } from '@ant-design/icons';
+import { downloadQuotationPDF } from '@/lib/utils/reactPdfUtils';
+// import { testPDFGeneration } from '@/lib/utils/simplePdfUtils';
 import { IQuotation } from '@/lib/db/models/Quotation';
 import { IStandardContent } from '@/lib/db/models/StandardContent';
 
@@ -45,6 +46,7 @@ const QuotationHeader: React.FC<QuotationHeaderProps> = ({
   standardContent,
   theme
 }) => {
+  const { message } = App.useApp();
   const [shareModalVisible, setShareModalVisible] = useState(false);
   const [shareUrl, setShareUrl] = useState('');
 
@@ -69,34 +71,29 @@ const QuotationHeader: React.FC<QuotationHeaderProps> = ({
     return url;
   };
 
-  // Print function
-  const handlePrint = () => {
-    window.print();
-    message.success('Print dialog opened');
-  };
-
-  // Export PDF function
+  // Export PDF function using utility
   const handleExportPDF = async () => {
     try {
-      message.loading('Generating PDF...', 0);
+      message.loading('Generating comprehensive PDF...', 0);
       
-      // Simulate PDF generation
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Get the quotation URL
+      const quotationUrl = generateShareUrl();
       
-      // Create a simple PDF download
-      const element = document.createElement('a');
-      const file = new Blob([`Quotation: ${quotation.title}\n\nCompany: ${companyDetails.name}\nEmail: ${companyDetails.email}\nPhone: ${companyDetails.phone}\nWebsite: ${companyDetails.website}\n\nGenerated on: ${new Date().toLocaleDateString()}`], {type: 'text/plain'});
-      element.href = URL.createObjectURL(file);
-      element.download = `quotation-${quotation.title?.replace(/\s+/g, '-').toLowerCase() || 'quotation'}.txt`;
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
+      // Call the React PDF utility
+      await downloadQuotationPDF({
+        quotation,
+        companyDetails,
+        standardContent,
+        quotationUrl
+      });
       
       message.destroy();
-      message.success('PDF exported successfully!');
-    } catch {
+      message.success('Complete quotation PDF exported successfully!');
+      
+    } catch (error) {
       message.destroy();
       message.error('Failed to export PDF');
+      console.error('PDF Export Error:', error);
     }
   };
 
@@ -152,95 +149,107 @@ const QuotationHeader: React.FC<QuotationHeaderProps> = ({
         boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
         border: 'none'
       }}>
-        <Row align="middle" justify="space-between" gutter={[24, 24]}>
+        <Row align="middle" justify="space-between" gutter={[16, 16]}>
           <Col xs={24} md={16}>
-            <Space size="large" align="start" style={{ width: '100%' }}>
+            <div className="flex flex-col sm:flex-row items-start gap-4">
               {companyDetails.logo && (
                 <div style={{ 
                   padding: '8px', 
                   background: theme.colorBgContainer, 
                   borderRadius: '12px',
                   border: `2px solid ${theme.colorBorder}`
-                }}>
+                }} className="flex-shrink-0">
                   <Image
                     src={companyDetails.logo}
                     alt="Company Logo"
                     style={{ 
-                      height: '90px', 
+                      height: '70px', 
                       width: 'auto', 
                       borderRadius: '8px',
-                      maxWidth: '160px'
+                      maxWidth: '140px'
                     }}
+                    className="sm:h-[90px] sm:max-w-[160px]"
                     preview={false}
                   />
                 </div>
               )}
-              <div style={{ flex: 1 }}>
+              <div className="flex-1 min-w-0">
                 <Title level={2} style={{ 
                   margin: 0, 
-                  
-                  fontSize: '28px',
+                  fontSize: '24px',
                   fontWeight: '700'
-                }}>
+                }} className="text-xl sm:text-2xl md:text-3xl">
                   {companyDetails.name}
                 </Title>
                 {companyDetails.tagline && (
                   <Text style={{ 
-                    fontSize: '16px', 
+                    fontSize: '14px', 
                     color: theme.colorTextSecondary,
                     fontStyle: 'italic',
                     display: 'block',
                     marginTop: '4px'
-                  }}>
+                  }} className="text-sm sm:text-base">
                     {companyDetails.tagline}
                   </Text>
                 )}
-                <Space style={{ marginTop: '12px' }} wrap size="middle">
+                <div className="flex flex-wrap gap-2 mt-3">
                   {companyDetails.email && (
                     <Tooltip title="Email us">
-                      <Space size="small" style={{ 
+                      <div style={{ 
                         padding: '6px 12px', 
                         background: theme.colorBgContainer, 
                         borderRadius: '20px',
-                        border: `1px solid ${theme.colorBorder}`
-                      }}>
-                        <MailFilled style={{ color: theme.colorPrimary, fontSize: '16px' }} />
-                        <Text copyable={{ text: companyDetails.email }} style={{ fontWeight: '500' }}>
-                          {companyDetails.email}
+                        border: `1px solid ${theme.colorBorder}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }} className="text-xs sm:text-sm">
+                        <MailFilled style={{ color: theme.colorPrimary, fontSize: '14px' }} />
+                        <Text copyable={{ text: companyDetails.email }} style={{ fontWeight: '500', fontSize: '12px' }}>
+                          <span className="hidden sm:inline">{companyDetails.email}</span>
+                          <span className="sm:hidden">Email</span>
                         </Text>
-                      </Space>
+                      </div>
                     </Tooltip>
                   )}
                   {companyDetails.phone && (
                     <Tooltip title="Call us">
-                      <Space size="small" style={{ 
+                      <div style={{ 
                         padding: '6px 12px', 
                         background: theme.colorBgContainer, 
                         borderRadius: '20px',
-                        border: `1px solid ${theme.colorBorder}`
-                      }}>
-                        <PhoneFilled style={{ color: theme.colorPrimary, fontSize: '16px' }} />
-                        <Text copyable={{ text: companyDetails.phone }} style={{ fontWeight: '500' }}>
-                          {companyDetails.phone}
+                        border: `1px solid ${theme.colorBorder}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }} className="text-xs sm:text-sm">
+                        <PhoneFilled style={{ color: theme.colorPrimary, fontSize: '14px' }} />
+                        <Text copyable={{ text: companyDetails.phone }} style={{ fontWeight: '500', fontSize: '12px' }}>
+                          <span className="hidden sm:inline">{companyDetails.phone}</span>
+                          <span className="sm:hidden">Call</span>
                         </Text>
-                      </Space>
+                      </div>
                     </Tooltip>
                   )}
                   {companyDetails.website && (
                     <Tooltip title="Visit our website">
-                      <Space size="small" style={{ 
+                      <div style={{ 
                         padding: '6px 12px', 
                         background: theme.colorBgContainer, 
                         borderRadius: '20px',
-                        border: `1px solid ${theme.colorBorder}`
-                      }}>
-                        <GlobalOutlined style={{ color: theme.colorPrimary, fontSize: '16px' }} />
+                        border: `1px solid ${theme.colorBorder}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }} className="text-xs sm:text-sm">
+                        <GlobalOutlined style={{ color: theme.colorPrimary, fontSize: '14px' }} />
                         <Text 
                           copyable={{ text: companyDetails.website }}
                           style={{ 
                             fontWeight: '500',
                             color: theme.colorPrimary,
-                            cursor: 'pointer'
+                            cursor: 'pointer',
+                            fontSize: '12px'
                           }}
                           onClick={() => {
                             let url = companyDetails.website;
@@ -250,36 +259,23 @@ const QuotationHeader: React.FC<QuotationHeaderProps> = ({
                             window.open(url, "_blank");
                           }}
                         >
-                          {companyDetails.website}
+                          <span className="hidden sm:inline">{companyDetails.website}</span>
+                          <span className="sm:hidden">Website</span>
                         </Text>
-                      </Space>
+                      </div>
                     </Tooltip>
                   )}
-                </Space>
+                </div>
               </div>
-            </Space>
+            </div>
           </Col>
           <Col xs={24} md={8}>
-            <Space wrap size="middle" style={{ width: '100%', justifyContent: 'flex-end' }}>
-              <Tooltip title="Print this quotation">
-                <Button 
-                  icon={<PrinterOutlined />} 
-                  onClick={handlePrint}
-                  style={{ 
-                    borderRadius: '8px',
-                    height: '40px',
-                    paddingLeft: '16px',
-                    paddingRight: '16px',
-                    fontWeight: '500'
-                  }}
-                >
-                  Print
-                </Button>
-              </Tooltip>
+            <div className="flex flex-col sm:flex-row gap-2 justify-end w-full">
               <Tooltip title="Export as PDF">
                 <Button 
                   icon={<DownloadOutlined />}
                   onClick={handleExportPDF}
+                  className="w-full sm:w-auto"
                   style={{ 
                     borderRadius: '8px',
                     height: '40px',
@@ -288,13 +284,14 @@ const QuotationHeader: React.FC<QuotationHeaderProps> = ({
                     fontWeight: '500'
                   }}
                 >
-                  Export PDF
+                  <span className="hidden sm:inline">Export PDF</span>
                 </Button>
               </Tooltip>
               <Tooltip title="Share this quotation">
                 <Button 
                   icon={<ShareAltOutlined />}
                   onClick={handleShare}
+                  className="w-full sm:w-auto"
                   style={{ 
                     borderRadius: '8px',
                     height: '40px',
@@ -303,10 +300,10 @@ const QuotationHeader: React.FC<QuotationHeaderProps> = ({
                     fontWeight: '500'
                   }}
                 >
-                  Share
+                  <span className="hidden sm:inline">Share</span>
                 </Button>
               </Tooltip>
-            </Space>
+            </div>
           </Col>
         </Row>
       </Card>
@@ -335,17 +332,15 @@ const QuotationHeader: React.FC<QuotationHeaderProps> = ({
                 value={shareUrl}
                 readOnly
                 style={{ 
-                  borderRadius: '8px 0 0 8px',
-                  background: '#f8f9fa'
+                  borderRadius: '8px 0 0 8px'
                 }}
               />
               <Button
                 icon={<CopyOutlined />}
                 onClick={handleCopyUrl}
+                type="primary"
                 style={{ 
-                  borderRadius: '0 8px 8px 0',
-                  background: theme.colorPrimary,
-                  borderColor: theme.colorPrimary
+                  borderRadius: '0 8px 8px 0'
                 }}
               >
                 Copy
@@ -357,10 +352,11 @@ const QuotationHeader: React.FC<QuotationHeaderProps> = ({
             <Text strong style={{ display: 'block', marginBottom: '12px' }}>
               Share on Social Media:
             </Text>
-            <Space wrap>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               <Button
                 icon={<LinkOutlined />}
                 onClick={() => handleSocialShare('whatsapp')}
+                className="w-full"
                 style={{ 
                   background: '#25D366', 
                   borderColor: '#25D366',
@@ -368,11 +364,13 @@ const QuotationHeader: React.FC<QuotationHeaderProps> = ({
                   borderRadius: '8px'
                 }}
               >
-                WhatsApp
+                <span className="hidden sm:inline">WhatsApp</span>
+                <span className="sm:hidden">WA</span>
               </Button>
               <Button
                 icon={<LinkOutlined />}
                 onClick={() => handleSocialShare('twitter')}
+                className="w-full"
                 style={{ 
                   background: '#1DA1F2', 
                   borderColor: '#1DA1F2',
@@ -380,11 +378,13 @@ const QuotationHeader: React.FC<QuotationHeaderProps> = ({
                   borderRadius: '8px'
                 }}
               >
-                Twitter
+                <span className="hidden sm:inline">Twitter</span>
+                <span className="sm:hidden">X</span>
               </Button>
               <Button
                 icon={<LinkOutlined />}
                 onClick={() => handleSocialShare('linkedin')}
+                className="w-full"
                 style={{ 
                   background: '#0077B5', 
                   borderColor: '#0077B5',
@@ -392,11 +392,13 @@ const QuotationHeader: React.FC<QuotationHeaderProps> = ({
                   borderRadius: '8px'
                 }}
               >
-                LinkedIn
+                <span className="hidden sm:inline">LinkedIn</span>
+                <span className="sm:hidden">LI</span>
               </Button>
               <Button
                 icon={<LinkOutlined />}
                 onClick={() => handleSocialShare('facebook')}
+                className="w-full"
                 style={{ 
                   background: '#4267B2', 
                   borderColor: '#4267B2',
@@ -404,11 +406,13 @@ const QuotationHeader: React.FC<QuotationHeaderProps> = ({
                   borderRadius: '8px'
                 }}
               >
-                Facebook
+                <span className="hidden sm:inline">Facebook</span>
+                <span className="sm:hidden">FB</span>
               </Button>
               <Button
                 icon={<MailFilled />}
                 onClick={() => handleSocialShare('email')}
+                className="w-full col-span-2 sm:col-span-1"
                 style={{ 
                   background: '#EA4335', 
                   borderColor: '#EA4335',
@@ -416,9 +420,10 @@ const QuotationHeader: React.FC<QuotationHeaderProps> = ({
                   borderRadius: '8px'
                 }}
               >
-                Email
+                <span className="hidden sm:inline">Email</span>
+                <span className="sm:hidden">Mail</span>
               </Button>
-            </Space>
+            </div>
           </div>
         </Space>
       </Modal>

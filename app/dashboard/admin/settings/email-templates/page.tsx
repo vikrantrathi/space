@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Card, Form, Input, Button, Typography, Space,
-  Modal, Select, Tooltip, App, Spin, theme
+  Modal, Select, Tooltip, App, Spin, Tag, theme
 } from 'antd';
 import UnifiedTable from '@/components/shared/UnifiedTable';
 import {
@@ -274,12 +274,9 @@ const EmailTemplatesPage: React.FC = () => {
               dataIndex: 'isActive',
               key: 'isActive',
               render: (isActive) => (
-                <span style={{
-                  color: isActive ? '#52c41a' : '#ff4d4f',
-                  fontWeight: 'bold'
-                }}>
+                <Tag color={isActive ? 'green' : 'red'} style={{ fontWeight: 'bold' }}>
                   {isActive ? 'Active' : 'Inactive'}
-                </span>
+                </Tag>
               ),
             },
             {
@@ -292,18 +289,30 @@ const EmailTemplatesPage: React.FC = () => {
               title: 'Actions',
               key: 'actions',
               render: (_: unknown, record: EmailTemplate) => (
-                <Button
-                  type="primary"
-                  icon={<EditOutlined />}
-                  size="small"
-                  onClick={() => {
-                    setEditingTemplate(record);
-                    templateForm.setFieldsValue(record);
-                    setModalVisible(true);
-                  }}
-                >
-                  Edit
-                </Button>
+                <Space>
+                  <Button
+                    type="primary"
+                    icon={<EditOutlined />}
+                    size="small"
+                    loading={templateLoading}
+                    onClick={() => {
+                      setEditingTemplate(record);
+                      templateForm.setFieldsValue(record);
+                      setModalVisible(true);
+                    }}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    type={record.isActive ? 'default' : 'primary'}
+                    icon={record.isActive ? <CloseCircleOutlined /> : <CheckCircleOutlined />}
+                    size="small"
+                    loading={templateLoading}
+                    onClick={() => handleToggleTemplate(record._id, record.isActive)}
+                  >
+                    {record.isActive ? 'Deactivate' : 'Activate'}
+                  </Button>
+                </Space>
               ),
             },
           ]}

@@ -184,7 +184,8 @@ const ProcessWorkflowTab: React.FC<ProcessWorkflowTabProps> = ({
             <Button
               type="primary"
               icon={<PlayCircleOutlined />}
-              style={{ marginTop: '16px', width: '100%', borderRadius: '8px' }}
+              className="w-full mt-4"
+              style={{ borderRadius: '8px' }}
               onClick={() => window.open(processVideo, '_blank')}
             >
               Watch Process Video

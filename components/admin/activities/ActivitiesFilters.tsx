@@ -44,13 +44,13 @@ const ActivitiesFilters: React.FC<ActivitiesFiltersProps> = ({
 }) => {
   return (
     <Card style={{ marginBottom: 16, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-      <Space wrap size="middle" style={{ width: '100%', justifyContent: 'space-between' }}>
-        <Space wrap size="middle" style={{ flex: 1, minWidth: 260 }}>
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
+        <div className="flex flex-col sm:flex-row gap-3 flex-1">
           <Input
             placeholder="Search activities or user emails"
             value={searchText}
             onChange={onSearchTextChange}
-            style={{ minWidth: 220, flex: 1 }}
+            className="w-full sm:w-auto sm:min-w-[220px] sm:flex-1"
             allowClear
             prefix={<span style={{ color: '#999' }}>🔍</span>}
           />
@@ -59,14 +59,14 @@ const ActivitiesFilters: React.FC<ActivitiesFiltersProps> = ({
             placeholder="Filter by User ID"
             value={userIdFilter}
             onChange={onUserIdChange}
-            style={{ minWidth: 180 }}
+            className="w-full sm:w-auto sm:min-w-[180px]"
             allowClear
             prefix={<UserOutlined style={{ color: '#999' }} />}
           />
 
           <Select
             placeholder="Filter by activity type"
-            style={{ minWidth: 200 }}
+            className="w-full sm:w-auto sm:min-w-[200px]"
             allowClear
             value={filterType || undefined}
             onChange={onFilterTypeChange}
@@ -88,24 +88,26 @@ const ActivitiesFilters: React.FC<ActivitiesFiltersProps> = ({
             placeholder={['Start Date', 'End Date']}
             value={dateRange}
             onChange={onDateRangeChange}
-            style={{ minWidth: 260 }}
+            className="w-full sm:w-auto sm:min-w-[260px]"
           />
-        </Space>
+        </div>
 
-        <Space wrap size="middle">
+        <div className="flex flex-wrap gap-2">
           <Button
             icon={<ReloadOutlined />}
             onClick={onRefresh}
             loading={loading}
+            className="flex-1 sm:flex-none"
           >
-            Refresh
+            <span className="hidden sm:inline">Refresh</span>
           </Button>
           <Button
             icon={<DownloadOutlined />}
             onClick={onExportCSV}
             type="default"
+            className="flex-1 sm:flex-none"
           >
-            Export CSV
+            <span className="hidden sm:inline">Export CSV</span>
           </Button>
           <Dropdown
             menu={{ items: clearMenuItems }}
@@ -116,12 +118,13 @@ const ActivitiesFilters: React.FC<ActivitiesFiltersProps> = ({
               icon={<ClearOutlined />}
               danger
               loading={clearLoading}
+              className="flex-1 sm:flex-none"
             >
-              Delete Activity
+              <span className="hidden sm:inline">Delete Activity</span>
             </Button>
           </Dropdown>
-        </Space>
-      </Space>
+        </div>
+      </div>
     </Card>
   );
 };

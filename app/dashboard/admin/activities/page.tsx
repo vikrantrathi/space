@@ -605,14 +605,14 @@ const AdminActivitiesPage: React.FC = () => {
   ];
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <div>
-          <Title level={2} style={{ margin: 0 }}>
+    <div className="px-2 md:px-0">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
+        <div className="mb-4 md:mb-0">
+          <Title level={2} style={{ margin: 0 }} className="text-lg md:text-2xl">
             <HistoryOutlined style={{ marginRight: 8 }} />
             Activity Log
           </Title>
-          <Text type="secondary" style={{ display: 'block', marginTop: '4px' }}>
+          <Text type="secondary" style={{ display: 'block', marginTop: '4px' }} className="text-sm md:text-base">
             Monitor all system activities and user actions
           </Text>
         </div>
@@ -655,7 +655,7 @@ const AdminActivitiesPage: React.FC = () => {
               `${range[0]}-${range[1]} of ${total} activities`,
             style: { marginTop: '16px' }
           }}
-          scroll={{ x: 800 }}
+          scroll={{ x: 'max-content' }}
           size="middle"
           style={{ backgroundColor: token.colorBgContainer }}
         />

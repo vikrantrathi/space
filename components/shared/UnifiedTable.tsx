@@ -20,12 +20,15 @@ function UnifiedTable<RecordType extends object = object>(props: Props<RecordTyp
       showSizeChanger: true,
       showQuickJumper: true,
       position: ['bottomRight'],
+      pageSizeOptions: ['5', '10', '20', '50', '100'],
+      showTotal: (total, range) =>
+        `${range[0]}-${range[1]} of ${total} items`,
       ...(pagination as TablePaginationConfig),
     };
   }
 
   const mergedScroll = {
-    x: 800,
+    x: 'max-content',
     ...scroll,
   };
 

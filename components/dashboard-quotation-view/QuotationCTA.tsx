@@ -117,7 +117,7 @@ const QuotationCTA: React.FC<QuotationCTAProps> = ({
       background: theme.colorBgContainer,
       boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
       border: 'none'
-    }}>
+    }} className="mx-2 md:mx-0">
       {quotation.status === 'accepted' ? (
         <div>
           <CheckCircleOutlined style={{ fontSize: '64px', color: theme.colorSuccess, marginBottom: '16px' }} />
@@ -263,12 +263,13 @@ const QuotationCTA: React.FC<QuotationCTAProps> = ({
           <Text style={{ fontSize: '16px', marginBottom: '24px', display: 'block' }}>
             Take action on this quotation
           </Text>
-          <Space size="large" wrap>
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
             <Button
               type="primary"
               size="large"
               icon={<CheckCircleOutlined />}
               onClick={() => handleActionClick('accept')}
+              className="w-full sm:w-auto"
               style={{ 
                 background: theme.colorSuccess, 
                 borderColor: theme.colorSuccess,
@@ -284,6 +285,7 @@ const QuotationCTA: React.FC<QuotationCTAProps> = ({
               size="large"
               icon={<ExclamationCircleOutlined />}
               onClick={() => handleActionClick('revision')}
+              className="w-full sm:w-auto"
               style={{ 
                 borderRadius: '8px',
                 height: '48px',
@@ -298,6 +300,7 @@ const QuotationCTA: React.FC<QuotationCTAProps> = ({
               size="large"
               icon={<CloseCircleOutlined />}
               onClick={() => handleActionClick('reject')}
+              className="w-full sm:w-auto"
               style={{ 
                 borderRadius: '8px',
                 height: '48px',
@@ -307,7 +310,7 @@ const QuotationCTA: React.FC<QuotationCTAProps> = ({
             >
               Decline
             </Button>
-          </Space>
+          </div>
         </div>
       )}
     </Card>

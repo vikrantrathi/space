@@ -67,7 +67,21 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
               border: '1px solid var(--ant-color-border)'
             }}
           >
-            <Descriptions column={2} size="small">
+            <Descriptions 
+              column={{ xs: 1, sm: 1, md: 2 }} 
+              size="small"
+              styles={{
+                label: { 
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  color: 'var(--ant-color-text-secondary)'
+                },
+                content: { 
+                  fontSize: '13px',
+                  wordBreak: 'break-word'
+                }
+              }}
+            >
               <Descriptions.Item label="Quotation No">
                 <Text strong>{quotation.quotationNo || 'N/A'}</Text>
               </Descriptions.Item>
@@ -77,7 +91,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
               <Descriptions.Item label="Expiration Date">
                 <Text>{quotation.expirationDate?.toLocaleDateString() || 'N/A'}</Text>
               </Descriptions.Item>
-              <Descriptions.Item label="Quotation Validity (Days)">
+              <Descriptions.Item label="Validity (Days)">
                 <Text>{validityDays ? `${validityDays} days` : 'N/A'}</Text>
               </Descriptions.Item>
               <Descriptions.Item label="Status">

@@ -28,38 +28,65 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const { name, type, subject, htmlContent, textContent, variables, isActive, updatedBy } = await request.json();
-
-    if (!name || !type || !subject || !htmlContent) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-    }
+    const body = await request.json();
+    const { name, type, subject, htmlContent, textContent, variables, isActive, updatedBy } = body;
 
     await connectToDatabase();
 
-    const updatedTemplate = await EmailTemplate.findByIdAndUpdate(
-      id,
-      {
-        name,
-        type,
-        subject,
-        htmlContent,
-        textContent,
-        variables: variables || [],
-        isActive: isActive !== undefined ? isActive : true,
-        updatedBy,
-      },
-      { new: true }
-    );
+    // Check if this is a toggle operation (only isActive and updatedBy provided)
+    const isToggleOperation = Object.keys(body).length === 2 && 'isActive' in body && 'updatedBy' in body;
 
-    if (!updatedTemplate) {
-      return NextResponse.json({ error: 'Template not found' }, { status: 404 });
+    if (isToggleOperation) {
+      // Handle toggle operation - only update isActive
+      const updatedTemplate = await EmailTemplate.findByIdAndUpdate(
+        id,
+        {
+          isActive,
+          updatedBy,
+        },
+        { new: true }
+      );
+
+      if (!updatedTemplate) {
+        return NextResponse.json({ error: 'Template not found' }, { status: 404 });
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: `Email template ${isActive ? 'activated' : 'deactivated'} successfully`,
+        template: updatedTemplate
+      });
+    } else {
+      // Handle full update operation
+      if (!name || !type || !subject || !htmlContent) {
+        return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+      }
+
+      const updatedTemplate = await EmailTemplate.findByIdAndUpdate(
+        id,
+        {
+          name,
+          type,
+          subject,
+          htmlContent,
+          textContent,
+          variables: variables || [],
+          isActive: isActive !== undefined ? isActive : true,
+          updatedBy,
+        },
+        { new: true }
+      );
+
+      if (!updatedTemplate) {
+        return NextResponse.json({ error: 'Template not found' }, { status: 404 });
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Email template updated successfully',
+        template: updatedTemplate
+      });
     }
-
-    return NextResponse.json({
-      success: true,
-      message: 'Email template updated successfully',
-      template: updatedTemplate
-    });
   } catch (error) {
     console.error('Update email template error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

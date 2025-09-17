@@ -128,16 +128,54 @@ const ClientDashboardContent: React.FC = () => {
       title: 'Actions',
       key: 'actions',
       render: (record: Quotation) => (
-        <Space>
-          <Button
-            type="primary"
-            size="small"
-            icon={<EyeOutlined />}
-            onClick={() => window.open(`/quotation/${record._id}`, '_blank')}
-          >
-            View
-          </Button>
-        </Space>
+        <div>
+          {record.status === 'accepted' ? (
+            <div>
+              <div style={{ marginBottom: '4px' }}>
+                <Tag color="green">Accepted</Tag>
+                <div style={{ fontSize: '12px', marginTop: 4 }}>
+                  {(() => {
+                    const accepted = record.actions?.filter(a => a.action === 'accept').slice(-1)[0];
+                    const date = accepted?.timestamp ? new Date(accepted.timestamp) : new Date(record.createdAt);
+                    return `on ${date.toLocaleDateString()}`;
+                  })()}
+                </div>
+              </div>
+              <div style={{ marginBottom: '4px' }}>
+                <Button
+                  type="default"
+                  size="small"
+                  icon={<EyeOutlined />}
+                  onClick={() => window.open(`/quotation/${record._id}`, '_blank')}
+                >
+                  View
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div style={{ marginBottom: '4px' }}>
+                <Button
+                  type="default"
+                  size="small"
+                  icon={<EyeOutlined />}
+                  onClick={() => window.open(`/quotation/${record._id}`, '_blank')}
+                >
+                  View
+                </Button>
+              </div>
+            </>
+          )}
+          {record.actions && record.actions.length > 0 && (
+            <div style={{ fontSize: '12px', color: token.colorTextSecondary }}>
+              <div>Last action: <strong>{record.actions[record.actions.length - 1].action}</strong></div>
+              <div>{new Date(record.actions[record.actions.length - 1].timestamp).toLocaleDateString()}</div>
+              {record.actions[record.actions.length - 1].verified && (
+                <Tag color="green">Verified</Tag>
+              )}
+            </div>
+          )}
+        </div>
       ),
     },
   ];
@@ -295,30 +333,28 @@ const ClientDashboardContent: React.FC = () => {
       {/* Quotations Section */}
       <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
         <Col xs={24}>
-          <Card
-            title={
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                <FileTextOutlined style={{ marginRight: 8, color: '#1890ff' }} />
-                My Quotations ({quotations.length})
-              </div>
-            }
-          >
-            <UnifiedTable
-              columns={quotationColumns}
-              dataSource={quotations}
-              loading={loadingQuotations}
-              rowKey="_id"
-              pagination={{
-                pageSize: 5,
-                showSizeChanger: false,
-                showQuickJumper: false,
-                showTotal: (total, range) =>
-                  `${range[0]}-${range[1]} of ${total} quotations`,
-              }}
-              locale={{ emptyText: 'No quotations found' }}
-              scroll={{ x: 600 }}
-            />
-          </Card>
+          <div style={{ marginBottom: 16 }}>
+            <Title level={3} style={{ margin: 0, display: 'flex', alignItems: 'center' }}>
+              <FileTextOutlined style={{ marginRight: 8, color: '#1890ff' }} />
+              My Quotations ({quotations.length})
+            </Title>
+          </div>
+          <UnifiedTable
+            columns={quotationColumns}
+            dataSource={quotations}
+            loading={loadingQuotations}
+            rowKey="_id"
+            pagination={{
+              pageSize: 5,
+              showSizeChanger: true,
+              showQuickJumper: true,
+              pageSizeOptions: ['5', '10', '20', '50'],
+              showTotal: (total, range) =>
+                `${range[0]}-${range[1]} of ${total} quotations`,
+            }}
+            locale={{ emptyText: 'No quotations found' }}
+            scroll={{ x: 600 }}
+          />
         </Col>
       </Row>
     </div>

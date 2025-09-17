@@ -66,8 +66,18 @@ const TestimonialsPortfolioTab: React.FC<TestimonialsPortfolioTabProps> = ({
               infinite={true}
               slidesToShow={1}
               slidesToScroll={1}
-              centerMode={true}
-              centerPadding="40px"
+              centerMode={false}
+              centerPadding="0px"
+              responsive={[
+                {
+                  breakpoint: 768,
+                  settings: {
+                    centerMode: false,
+                    centerPadding: "0px",
+                    arrows: false
+                  }
+                }
+              ]}
             >
               {testimonials.map((testimonial, index) => (
                 <div key={index} style={{ padding: '0 8px' }}>
@@ -80,13 +90,13 @@ const TestimonialsPortfolioTab: React.FC<TestimonialsPortfolioTabProps> = ({
                     cursor: 'pointer',
                     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
                     position: 'relative',
-                    padding: '32px 24px',
+                    padding: '20px 16px',
                     textAlign: 'center',
-                    minHeight: '320px',
+                    minHeight: '280px',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'center'
-                  }}
+                  }} className="sm:p-8 sm:min-h-[320px]"
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
                     e.currentTarget.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.2)';
@@ -99,15 +109,16 @@ const TestimonialsPortfolioTab: React.FC<TestimonialsPortfolioTabProps> = ({
                   }}
                   >
                     {/* User Avatar */}
-                    <div style={{ marginBottom: '20px' }}>
+                    <div style={{ marginBottom: '16px' }} className="sm:mb-5">
                       <Avatar 
-                        size={64} 
+                        size={48} 
                         src={testimonial.avatar}
                         style={{ 
                           backgroundColor: testimonial.avatar ? 'transparent' : 'var(--ant-color-primary)',
-                          fontSize: '24px',
+                          fontSize: '20px',
                           fontWeight: 'bold'
                         }}
+                        className="sm:!w-16 sm:!h-16 sm:!text-2xl"
                       >
                         {!testimonial.avatar && (testimonial.name?.charAt(0) || 'U')}
                       </Avatar>
@@ -118,21 +129,22 @@ const TestimonialsPortfolioTab: React.FC<TestimonialsPortfolioTabProps> = ({
                       disabled 
                       defaultValue={testimonial.rating} 
                       style={{ 
-                        fontSize: '24px', 
-                        marginBottom: '24px',
+                        fontSize: '18px', 
+                        marginBottom: '16px',
                         color: '#FFD700'
                       }} 
+                      className="sm:!text-2xl sm:!mb-6"
                     />
                     
                     {/* Testimonial Message */}
                     <Paragraph style={{ 
-                      fontSize: '16px', 
+                      fontSize: '14px', 
                       fontStyle: 'italic', 
-                      margin: '0 0 24px 0',
+                      margin: '0 0 16px 0',
                       color: 'var(--ant-color-text)',
-                      lineHeight: '1.7',
+                      lineHeight: '1.6',
                       fontWeight: '400'
-                    }}>
+                    }} className="sm:!text-base sm:!mb-6 sm:!leading-7">
                       {testimonial.message}
                     </Paragraph>
                     
@@ -196,8 +208,18 @@ const TestimonialsPortfolioTab: React.FC<TestimonialsPortfolioTabProps> = ({
               infinite={true}
               slidesToShow={1}
               slidesToScroll={1}
-              centerMode={true}
-              centerPadding="40px"
+              centerMode={false}
+              centerPadding="0px"
+              responsive={[
+                {
+                  breakpoint: 768,
+                  settings: {
+                    centerMode: false,
+                    centerPadding: "0px",
+                    arrows: false
+                  }
+                }
+              ]}
             >
             {previousWork.map((work, index) => (
               <div key={index} style={{ padding: '0 8px' }}>
@@ -223,7 +245,7 @@ const TestimonialsPortfolioTab: React.FC<TestimonialsPortfolioTabProps> = ({
                 }}
                 >
                   {/* Project Image */}
-                  <div style={{ position: 'relative', height: '250px', overflow: 'hidden' }}>
+                  <div style={{ position: 'relative', height: '200px', overflow: 'hidden' }} className="sm:h-[250px]">
                     <Image
                       src={work.image}
                       alt={work.title}
@@ -277,21 +299,21 @@ const TestimonialsPortfolioTab: React.FC<TestimonialsPortfolioTabProps> = ({
                   </div>
                   
                   {/* Project Content */}
-                  <div style={{ padding: '24px' }}>
+                  <div style={{ padding: '16px' }} className="sm:p-6">
                     <Title level={4} style={{ 
                       margin: '0 0 8px 0',
                       color: 'var(--ant-color-text)',
-                      fontSize: '18px',
+                      fontSize: '16px',
                       fontWeight: '600'
-                    }}>
+                    }} className="sm:!text-lg">
                       {work.title}
                     </Title>
                     <Paragraph style={{ 
-                      fontSize: '14px', 
+                      fontSize: '12px', 
                       margin: '0 0 0 0',
                       color: 'var(--ant-color-text-secondary)',
-                      lineHeight: '1.6'
-                    }}>
+                      lineHeight: '1.5'
+                    }} className="sm:!text-sm sm:!leading-6">
                       {work.description}
                     </Paragraph>
                   </div>

@@ -232,8 +232,8 @@ const QuotationLandingTemplate: React.FC<QuotationLandingTemplateProps> = ({
       background: resolved === 'dark'
         ? 'linear-gradient(135deg, #1f1f1f 0%, #2d2d2d 100%)'
         : 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-      padding: printMode ? '0' : '20px'
-    }}>
+      padding: printMode ? '0' : '10px'
+    }} className="px-2 md:px-5">
       {/* Print Styles */}
       <style jsx global>{`
         @media print {
@@ -270,10 +270,9 @@ const QuotationLandingTemplate: React.FC<QuotationLandingTemplateProps> = ({
       }}>
 
         {/* Header Section */}
-        <div className="print-header" style={{
+        <div className="print-header p-4 md:p-10" style={{
           background: 'linear-gradient(135deg, #1a365d 0%, #2c5282 100%)',
           color: 'white',
-          padding: '40px',
           position: 'relative',
           overflow: 'hidden'
         }}>
@@ -297,20 +296,20 @@ const QuotationLandingTemplate: React.FC<QuotationLandingTemplateProps> = ({
                   color: 'white',
                   margin: 0,
                   display: 'inline-block',
-                  fontSize: '42px',
+                  fontSize: '28px',
                   fontWeight: '700',
                   textShadow: '2px 2px 4px rgba(0,0,0,0.3)'
-                }}>
+                }} className="text-2xl md:text-4xl">
                   {quotation.companyDetails?.name || 'STARTUPZILA'}
                 </Title>
               </div>
               <Text style={{
-                fontSize: '18px',
+                fontSize: '16px',
                 color: 'rgba(255,255,255,0.9)',
                 display: 'block',
                 marginBottom: '20px',
                 fontWeight: '300'
-              }}>
+              }} className="text-sm md:text-lg">
                 {'Premium Digital Solutions & Innovation Partner'}
               </Text>
 

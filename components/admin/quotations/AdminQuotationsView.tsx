@@ -845,7 +845,7 @@ const AdminQuotationsView: React.FC = () => {
       title: 'Actions',
       key: 'actions',
       render: (record: Quotation) => (
-        <Space>
+        <div className="flex flex-col sm:flex-row gap-1">
           <Tooltip title="Edit Quotation">
             <Button
               type="default"
@@ -854,8 +854,9 @@ const AdminQuotationsView: React.FC = () => {
               onClick={() => {
                 router.push(`/dashboard/admin/quotations/create?id=${record._id}`);
               }}
+              className="w-full sm:w-auto"
             >
-              Edit
+              <span className="hidden sm:inline">Edit</span>
             </Button>
           </Tooltip>
           <Tooltip title="View Quotation">
@@ -864,8 +865,9 @@ const AdminQuotationsView: React.FC = () => {
               size="small"
               icon={<EyeOutlined />}
               onClick={() => window.open(`/quotation/${record._id}`, '_blank')}
+              className="w-full sm:w-auto"
             >
-              View
+              <span className="hidden sm:inline">View</span>
             </Button>
           </Tooltip>
           {record.status === 'draft' && (
@@ -879,8 +881,9 @@ const AdminQuotationsView: React.FC = () => {
                     loading={actionLoading === record._id}
                     onClick={() => handleQuotationAction(record._id, 'send_revision')}
                     style={{ backgroundColor: '#fa8c16', borderColor: '#fa8c16' }}
+                    className="w-full sm:w-auto"
                   >
-                    Send Revision
+                    <span className="hidden sm:inline">Send Revision</span>
                   </Button>
                 </Tooltip>
               ) : (
@@ -891,8 +894,9 @@ const AdminQuotationsView: React.FC = () => {
                     icon={<SendOutlined />}
                     loading={actionLoading === record._id}
                     onClick={() => handleQuotationAction(record._id, 'send')}
+                    className="w-full sm:w-auto"
                   >
-                    Send
+                    <span className="hidden sm:inline">Send</span>
                   </Button>
                 </Tooltip>
               )}
@@ -915,8 +919,9 @@ const AdminQuotationsView: React.FC = () => {
                   window.prompt('Copy link', url);
                 }
               }}
+              className="w-full sm:w-auto"
             >
-              Copy Link
+              <span className="hidden sm:inline">Copy Link</span>
             </Button>
           </Tooltip>
           {!record.associatedUser && (
@@ -925,6 +930,7 @@ const AdminQuotationsView: React.FC = () => {
                 type="default"
                 size="small"
                 icon={<UserOutlined />}
+                className="w-full sm:w-auto"
                 onClick={() => {
                   // Show user selection modal - exclude current admin
                   const userOptions = users
@@ -952,7 +958,7 @@ const AdminQuotationsView: React.FC = () => {
                   });
                 }}
               >
-                Associate
+                <span className="hidden sm:inline">Associate</span>
               </Button>
             </Tooltip>
           )}
@@ -962,6 +968,7 @@ const AdminQuotationsView: React.FC = () => {
               size="small"
               icon={<DeleteOutlined />}
               loading={actionLoading === record._id}
+              className="w-full sm:w-auto"
               onClick={() => {
                 modal.confirm({
                   title: 'Delete Quotation',
@@ -973,10 +980,10 @@ const AdminQuotationsView: React.FC = () => {
                 });
               }}
             >
-              Delete
+              <span className="hidden sm:inline">Delete</span>
             </Button>
           </Tooltip>
-        </Space>
+        </div>
       ),
     },
   ];
@@ -1047,44 +1054,47 @@ const AdminQuotationsView: React.FC = () => {
   ];
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <div>
-          <Title level={2}>
+    <div className="px-2 md:px-0">
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-6">
+        <div className="mb-4 lg:mb-0">
+          <Title level={2} className="text-lg md:text-2xl">
             <FileTextOutlined style={{ marginRight: 8 }} />
             Quotation Management
           </Title>
-          <Text type="secondary" style={{ display: 'block' }}>
+          <Text type="secondary" style={{ display: 'block' }} className="text-sm md:text-base">
             Create, manage, and track quotations
           </Text>
         </div>
-        <Space>
+        <div className="flex flex-col sm:flex-row gap-2">
           <Button
             type="default"
             icon={<ReloadOutlined />}
             onClick={fetchQuotations}
             loading={loading}
             size="large"
+            className="w-full sm:w-auto"
           >
-            Refresh
+            <span className="hidden sm:inline">Refresh</span>
           </Button>
           <Button
             type="default"
             icon={<EditOutlined />}
             onClick={() => router.push('/dashboard/admin/quotations/standard-content')}
             size="large"
+            className="w-full sm:w-auto"
           >
-            Standard Content
+            <span className="hidden sm:inline">Standard Content</span>
           </Button>
           <Button
             type="primary"
             icon={<PlusOutlined />}
             onClick={() => router.push('/dashboard/admin/quotations/create')}
             size="large"
+            className="w-full sm:w-auto"
           >
-            Create Quotation
+            <span className="hidden sm:inline">Create Quotation</span>
           </Button>
-        </Space>
+        </div>
       </div>
 
       <Card>

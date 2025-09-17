@@ -21,6 +21,13 @@ const AdminSettingsView: React.FC = () => {
   const [profileForm] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [mfaEnabled, setMfaEnabled] = useState(user?.mfaEnabled || false);
+
+  // Sync local MFA state with auth context
+  useEffect(() => {
+    if (user?.mfaEnabled !== undefined) {
+      setMfaEnabled(user.mfaEnabled);
+    }
+  }, [user?.mfaEnabled]);
   const [avatarUrl, setAvatarUrl] = useState(user?.profilePicture || '');
 
   // Sync avatarUrl with user profile picture
@@ -209,6 +216,8 @@ const AdminSettingsView: React.FC = () => {
       }
       
       setMfaEnabled(checked);
+      // Update the global auth context
+      updateUser({ mfaEnabled: checked });
       notification.success({
         message: `MFA ${checked ? 'Enabled' : 'Disabled'} Successfully`,
         description: `Multi-factor authentication has been ${checked ? 'enabled' : 'disabled'}.${checked ? ' You will now need to verify with OTP when logging in.' : ' You will no longer need OTP verification for login.'}`,

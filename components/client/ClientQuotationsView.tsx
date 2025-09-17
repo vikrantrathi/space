@@ -421,13 +421,13 @@ const ClientQuotationsView: React.FC = () => {
             
             // Otherwise show action buttons
             return (
-              <Space size={8} wrap>
-                <Button size="small" type="primary" onClick={() => openAction(record._id, 'accept')}>Approve</Button>
-                <Button size="small" danger onClick={() => openAction(record._id, 'reject')}>Reject</Button>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button size="small" type="primary" onClick={() => openAction(record._id, 'accept')} className="w-full sm:w-auto">Approve</Button>
+                <Button size="small" danger onClick={() => openAction(record._id, 'reject')} className="w-full sm:w-auto">Reject</Button>
                 {(!hasClientRevision || hasAdminRevision) && (
-                  <Button size="small" onClick={() => openAction(record._id, 'revision')}>Request Revision</Button>
+                  <Button size="small" onClick={() => openAction(record._id, 'revision')} className="w-full sm:w-auto">Request Revision</Button>
                 )}
-              </Space>
+              </div>
             );
           })()}
             </>
@@ -447,34 +447,32 @@ const ClientQuotationsView: React.FC = () => {
   ];
 
   return (
-    <div>
-      <div style={{ marginBottom: 24 }}>
-        <Title level={2}>
+    <div className="px-2 md:px-0">
+      <div className="mb-6">
+        <Title level={2} className="text-lg md:text-2xl">
           <FileTextOutlined style={{ marginRight: 8 }} />
           My Quotations
         </Title>
-        <Text type="secondary" style={{ display: 'block' }}>
+        <Text type="secondary" style={{ display: 'block' }} className="text-sm md:text-base">
           View and manage your quotations
         </Text>
       </div>
 
-      <Card>
-        <UnifiedTable
-          columns={columns}
-          dataSource={quotations}
-          loading={loading}
-          rowKey="_id"
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) =>
-              `${range[0]}-${range[1]} of ${total} quotations`,
-          }}
-          scroll={{ x: 600 }}
-          locale={{ emptyText: 'No quotations found' }}
-        />
-      </Card>
+      <UnifiedTable
+        columns={columns}
+        dataSource={quotations}
+        loading={loading}
+        rowKey="_id"
+        pagination={{
+          pageSize: 10,
+          showSizeChanger: true,
+          showQuickJumper: true,
+          showTotal: (total, range) =>
+            `${range[0]}-${range[1]} of ${total} quotations`,
+        }}
+        scroll={{ x: 'max-content' }}
+        locale={{ emptyText: 'No quotations found' }}
+      />
       {/* Action Modal */}
       <Modal
         title={selectedAction ? `Confirm ${selectedAction === 'accept' ? 'Approval' : selectedAction === 'reject' ? 'Rejection' : 'Revision Request'}` : 'Respond to Quotation'}

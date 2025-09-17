@@ -281,27 +281,30 @@ const AdminCreateQuotationForm: React.FC = () => {
   // util: responsive grid columns
   const grid = (min = 240) => ({
     display: 'grid',
-    gridTemplateColumns: `repeat(auto-fit,minmax(${min}px,1fr))`,
+    gridTemplateColumns: '1fr',
     gap: '16px',
+    '@media (min-width: 640px)': {
+      gridTemplateColumns: `repeat(auto-fit,minmax(${min}px,1fr))`,
+    }
   } as React.CSSProperties);
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <div>
+    <div className="px-2 md:px-0">
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-6">
+        <div className="mb-4 lg:mb-0">
           <Button
             type="text"
             icon={<ArrowLeftOutlined />}
             onClick={() => router.push('/dashboard/admin/quotations')}
-            style={{ marginBottom: 16, padding: 0 }}
+            className="mb-4 p-0"
           >
             Back to Quotations
           </Button>
-          <Title level={2}>
+          <Title level={2} className="text-lg md:text-2xl">
             <FileTextOutlined style={{ marginRight: 8 }} />
             Create New Quotation
           </Title>
-          <Text type="secondary" style={{ display: 'block' }}>
+          <Text type="secondary" style={{ display: 'block' }} className="text-sm md:text-base">
             Fill in the details to create a new quotation
           </Text>
         </div>
@@ -319,7 +322,7 @@ const AdminCreateQuotationForm: React.FC = () => {
             <Title level={4} style={{ marginBottom: 16 }}>
               Basic Information
             </Title>
-            <div style={grid()}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Form.Item
                 name="title"
                 label="Quotation Title"
@@ -439,7 +442,7 @@ const AdminCreateQuotationForm: React.FC = () => {
               <Input type="hidden" />
             </Form.Item>
 
-            <div style={grid()}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Form.Item
                 name="clientName"
                 label="Client Name"
@@ -460,7 +463,7 @@ const AdminCreateQuotationForm: React.FC = () => {
               </Form.Item>
             </div>
 
-            <div style={grid()}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Form.Item
                 name="clientPhone"
                 label="Client Phone"
@@ -476,7 +479,7 @@ const AdminCreateQuotationForm: React.FC = () => {
               </Form.Item>
             </div>
 
-            <div style={grid()}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Form.Item
                 name="clientAddress"
                 label="Client Address"
@@ -515,7 +518,7 @@ const AdminCreateQuotationForm: React.FC = () => {
               Project Details
             </Title>
 
-            <div style={grid()}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Form.Item
               name="projectDescription"
               label="Project Description"
@@ -689,7 +692,7 @@ const AdminCreateQuotationForm: React.FC = () => {
             <Title level={4} style={{ marginBottom: 16 }}>
               Quotation Details
             </Title>
-            <div style={grid()}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Form.Item
                 name="quotationNo"
                 label="Quotation No"
@@ -815,10 +818,11 @@ const AdminCreateQuotationForm: React.FC = () => {
 
           {/* Form Actions */}
           <Form.Item style={{ marginBottom: 0, textAlign: 'right', borderTop: '1px solid #f0f0f0', paddingTop: 24 }}>
-            <Space size="large">
+            <div className="flex flex-col sm:flex-row gap-3">
               <Button
                 size="large"
                 onClick={() => router.push('/dashboard/admin/quotations')}
+                className="w-full sm:w-auto"
               >
                 Cancel
               </Button>
@@ -827,11 +831,12 @@ const AdminCreateQuotationForm: React.FC = () => {
                 htmlType="submit"
                 loading={loading}
                 size="large"
+                className="w-full sm:w-auto"
                 style={{ minWidth: 140 }}
               >
                 Create Quotation
               </Button>
-            </Space>
+            </div>
           </Form.Item>
         </Form>
       </Card>

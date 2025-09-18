@@ -145,25 +145,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         height: '100vh',
         backgroundColor: '#f5f5f5'
       }}>
-        {isClientMounted && <Spin size="large" />}
-        {!isClientMounted && (
-          <>
-            <style jsx>{`
-              @keyframes spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-              }
-            `}</style>
-            <div style={{
-              width: '32px',
-              height: '32px',
-              border: '3px solid #f3f3f3',
-              borderTop: '3px solid #1890ff',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite'
-            }} />
-          </>
-        )}
+        <Spin size="large" />
       </div>
     );
   }

@@ -346,20 +346,21 @@ const QuotationPage: React.FC = () => {
   return (
     <QuotationLandingTemplate
       quotation={processedQuotation as Quotation}
-      onAction={(data) => {
+      standardContent={standardContent || undefined}
+      onAction={(action, data) => {
         if (isAuthenticated && user) {
           // For logged-in users, check if reason is required
-          if (data.action === 'reject' || data.action === 'revision') {
+          if (action === 'reject' || action === 'revision') {
             // Open modal for reject/revision actions to get reason
-            setSelectedAction(data.action);
+            setSelectedAction(action);
             setActionModalVisible(true);
           } else {
             // For accept actions, call directly
-            handleLoggedInAction(data.action, data.reason);
+            handleLoggedInAction(action, data?.reason);
           }
         } else {
-          // For public users, use the OTP flow
-          handleAction(data);
+          // For public users, show OTP form to collect user details
+          setOtpModalVisible(true);
         }
       }}
       onOtpSubmit={handleOtpSubmit}

@@ -59,15 +59,28 @@ function applyHtmlTheme(resolved: ResolvedTheme) {
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setModeState] = useState<ThemeMode>('system');
-  const [resolved, setResolved] = useState<ResolvedTheme>('light'); // Always start with light to prevent hydration mismatch
+  const [resolved, setResolved] = useState<ResolvedTheme>('light'); // Start with light for SSR
   const [isClientMounted, setIsClientMounted] = useState(false);
 
-  // Handle client mounting first
+  // Handle client mounting and apply theme immediately
   useEffect(() => {
     setIsClientMounted(true);
+    
+    // Apply theme immediately to prevent flash
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY) as ThemeMode | null;
+      const initialMode: ThemeMode = saved === 'light' || saved === 'dark' || saved === 'system' ? saved : 'system';
+      setModeState(initialMode);
+      const res = computeResolved(initialMode);
+      setResolved(res);
+      applyHtmlTheme(res);
+    } catch {
+      // Fallback to light theme
+      applyHtmlTheme('light');
+    }
   }, []);
 
-  // Initialize from localStorage after client mount
+  // Initialize from localStorage after client mount (redundant but safe)
   useEffect(() => {
     if (!isClientMounted) return;
     

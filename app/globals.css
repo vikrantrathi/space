@@ -35,6 +35,21 @@ body {
   padding: 0;
 }
 
+/* Prevent flash of unstyled content - use opacity instead of visibility */
+html {
+  opacity: 0;
+  transition: opacity 0.1s ease-in-out;
+}
+
+html[data-theme] {
+  opacity: 1;
+}
+
+/* Fallback for when theme is not yet applied */
+html:not([data-theme]) {
+  opacity: 0;
+}
+
 /* Custom styles for better UX */
 .ant-layout-sider {
   background: var(--sider-bg) !important;
@@ -84,6 +99,130 @@ body {
 
 .ant-form-item-label > label {
   font-weight: 500;
+}
+
+/* Landing Page Animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Landing Page Responsive Design */
+@media (max-width: 1200px) {
+  .landing-container {
+    padding: 0 16px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .landing-container {
+    padding: 0 12px !important;
+  }
+  
+  .landing-hero-title {
+    font-size: clamp(28px, 8vw, 48px) !important;
+  }
+  
+  .landing-hero-description {
+    font-size: clamp(14px, 4vw, 18px) !important;
+  }
+  
+  .landing-stats-number {
+    font-size: clamp(20px, 6vw, 32px) !important;
+  }
+  
+  .landing-stats-label {
+    font-size: clamp(10px, 3vw, 14px) !important;
+  }
+  
+  .landing-section-title {
+    font-size: clamp(28px, 6vw, 42px) !important;
+  }
+  
+  .landing-card-padding {
+    padding: clamp(16px, 4vw, 24px) !important;
+  }
+  
+  .landing-button-large {
+    height: clamp(48px, 12vw, 64px) !important;
+    font-size: clamp(14px, 3vw, 20px) !important;
+    padding: 0 clamp(20px, 6vw, 40px) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .landing-hero-padding {
+    padding: clamp(40px, 8vw, 60px) 0 !important;
+  }
+  
+  .landing-section-padding {
+    padding: clamp(60px, 12vw, 100px) 20px !important;
+  }
+  
+  .landing-card-mobile {
+    margin: 0 -8px !important;
+    border-radius: 16px !important;
+  }
+}
+
+/* Dark Table Styling */
+.dark-table .ant-table {
+  background: #1a1a2e !important;
+}
+
+.dark-table .ant-table-thead > tr > th {
+  background: #2d3748 !important;
+  border-bottom: 1px solid #4a5568 !important;
+  color: #ffffff !important;
+}
+
+.dark-table .ant-table-tbody > tr > td {
+  background: #1a1a2e !important;
+  border-bottom: 1px solid #4a5568 !important;
+  color: #ffffff !important;
+}
+
+.dark-table .ant-table-tbody > tr:hover > td {
+  background: #2d3748 !important;
+}
+
+.dark-table .ant-table-tbody > tr:nth-child(even) > td {
+  background: #1a1a2e !important;
+}
+
+.dark-table .ant-table-tbody > tr:nth-child(even):hover > td {
+  background: #2d3748 !important;
+}
+
+/* Dark Timeline Styling */
+.dark-timeline .ant-timeline {
+  background: transparent !important;
+}
+
+.dark-timeline .ant-timeline-item {
+  background: transparent !important;
+}
+
+.dark-timeline .ant-timeline-item-tail {
+  border-left: 2px solid #4a5568 !important;
+}
+
+.dark-timeline .ant-timeline-item-content {
+  background: transparent !important;
+  color: #ffffff !important;
 }
 
 /* Responsive adjustments */

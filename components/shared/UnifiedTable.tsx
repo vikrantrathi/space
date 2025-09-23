@@ -4,25 +4,42 @@ import React from 'react';
 import { Table, theme } from 'antd';
 import type { TableProps, TablePaginationConfig } from 'antd';
 
-type Props<RecordType> = TableProps<RecordType>;
+type Props<RecordType> = TableProps<RecordType> & {
+  // Enhanced pagination props
+  defaultPageSize?: number;
+  pageSizeOptions?: string[];
+  showPaginationInfo?: boolean;
+  paginationPosition?: ('topLeft' | 'topCenter' | 'topRight' | 'bottomLeft' | 'bottomCenter' | 'bottomRight')[];
+};
 
 function UnifiedTable<RecordType extends object = object>(props: Props<RecordType>) {
   const { token } = theme.useToken();
 
-  const { size, bordered, pagination, scroll, style, ...rest } = props;
+  const { 
+    size, 
+    bordered, 
+    pagination, 
+    scroll, 
+    style, 
+    defaultPageSize = 10,
+    pageSizeOptions = ['5', '10', '20', '50', '100'],
+    showPaginationInfo = true,
+    paginationPosition = ['bottomRight'],
+    ...rest 
+  } = props;
 
   let mergedPagination: false | TablePaginationConfig;
   if (pagination === false) {
     mergedPagination = false;
   } else {
     mergedPagination = {
-      pageSize: 10,
+      pageSize: defaultPageSize,
       showSizeChanger: true,
       showQuickJumper: true,
-      position: ['bottomRight'],
-      pageSizeOptions: ['5', '10', '20', '50', '100'],
-      showTotal: (total, range) =>
-        `${range[0]}-${range[1]} of ${total} items`,
+      position: paginationPosition,
+      pageSizeOptions,
+      showTotal: showPaginationInfo ? (total, range) =>
+        `${range[0]}-${range[1]} of ${total} items` : undefined,
       ...(pagination as TablePaginationConfig),
     };
   }

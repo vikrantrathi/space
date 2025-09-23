@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, Card, Typography, message, Space, App } from 'antd';
+import { useNotification } from '@/lib/utils/notification';
+import { NOTIFICATION_MESSAGES } from '@/lib/utils/notificationMessages';
 import { LockOutlined, MailOutlined, KeyOutlined, CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { useAuth } from '../../../lib/auth/auth-context';
 import { useGlobalLoader } from '../../../components/shared/GlobalLoader';
@@ -11,7 +13,7 @@ import Image from 'next/image';
 const { Title, Text } = Typography;
 
 const LoginPage: React.FC = () => {
-  const { notification } = App.useApp();
+  const notification = useNotification();
   const { setLoading: setGlobalLoading } = useGlobalLoader();
   const [form] = Form.useForm();
   const [otpForm] = Form.useForm();
@@ -57,12 +59,8 @@ const LoginPage: React.FC = () => {
         // MFA is disabled - direct login successful
         localStorage.setItem('token', data.token);
         
-        notification.success({
-          message: 'Login Successful',
-          description: 'Welcome back! Redirecting to your dashboard...',
-          icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
-          duration: 3,
-        });
+        const msg = NOTIFICATION_MESSAGES.AUTH.LOGIN_SUCCESS;
+        notification.success(msg.message, msg.description, msg.duration);
 
         // Redirect based on user role
         setTimeout(() => {
@@ -75,12 +73,8 @@ const LoginPage: React.FC = () => {
       } else if (data.requiresOtp || data.mfaEnabled) {
         // MFA is enabled - proceed to OTP verification
         setStep('otp');
-        notification.success({
-          message: 'OTP Sent',
-          description: 'A 6-digit code has been sent to your email address.',
-          icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
-          duration: 4,
-        });
+        const msg = NOTIFICATION_MESSAGES.AUTH.OTP_SENT;
+        notification.success(msg.message, msg.description, msg.duration);
       } else {
         // Fallback - try the old way
         await login(values.email, values.password);
@@ -89,33 +83,17 @@ const LoginPage: React.FC = () => {
       // Handle specific approval status errors
       const errorMessage = error instanceof Error ? error.message : String(error);
       if (errorMessage.includes('pending approval')) {
-        notification.warning({
-          message: 'Account Pending Approval',
-          description: 'Your account is waiting for admin approval. You will be notified once approved.',
-          icon: <ClockCircleOutlined style={{ color: '#faad14' }} />,
-          duration: 6,
-        });
+        const msg = NOTIFICATION_MESSAGES.AUTH.ACCOUNT_PENDING_APPROVAL;
+        notification.warning(msg.message, msg.description, msg.duration);
       } else if (errorMessage.includes('rejected')) {
-        notification.error({
-          message: 'Account Rejected',
-          description: 'Your account has been rejected. Please contact support for more information.',
-          icon: <CloseCircleOutlined style={{ color: '#ff4d4f' }} />,
-          duration: 6,
-        });
+        const msg = NOTIFICATION_MESSAGES.AUTH.ACCOUNT_REJECTED;
+        notification.error(msg.message, msg.description, msg.duration);
       } else if (errorMessage.includes('deactivated')) {
-        notification.error({
-          message: 'Account Deactivated',
-          description: 'Your account has been deactivated. Please contact support.',
-          icon: <CloseCircleOutlined style={{ color: '#ff4d4f' }} />,
-          duration: 6,
-        });
+        const msg = NOTIFICATION_MESSAGES.AUTH.ACCOUNT_DEACTIVATED;
+        notification.error(msg.message, msg.description, msg.duration);
       } else {
-        notification.error({
-          message: 'Login Failed',
-          description: 'Please check your credentials and try again.',
-          icon: <CloseCircleOutlined style={{ color: '#ff4d4f' }} />,
-          duration: 4,
-        });
+        const msg = NOTIFICATION_MESSAGES.AUTH.LOGIN_FAILED;
+        notification.error(msg.message, msg.description, msg.duration);
       }
     } finally {
       setLoading(false);
@@ -126,20 +104,12 @@ const LoginPage: React.FC = () => {
     setOtpLoading(true);
     try {
       await verifyOtp(values.otp);
-      notification.success({
-        message: 'Login Successful',
-        description: 'Welcome back! Redirecting to your dashboard...',
-        icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
-        duration: 3,
-      });
+      const msg = NOTIFICATION_MESSAGES.AUTH.LOGIN_SUCCESS;
+      notification.success(msg.message, msg.description, msg.duration);
       // Redirect is handled by verifyOtp function in auth context
     } catch (error) {
-      notification.error({
-        message: 'Invalid OTP',
-        description: 'Please check the code and try again.',
-        icon: <CloseCircleOutlined style={{ color: '#ff4d4f' }} />,
-        duration: 4,
-      });
+      const msg = NOTIFICATION_MESSAGES.AUTH.INVALID_OTP;
+      notification.error(msg.message, msg.description, msg.duration);
     } finally {
       setOtpLoading(false);
     }
@@ -150,19 +120,11 @@ const LoginPage: React.FC = () => {
     if (email) {
       try {
         await sendOtp(email);
-        notification.success({
-          message: 'OTP Resent',
-          description: 'A new 6-digit code has been sent to your email.',
-          icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
-          duration: 3,
-        });
+        const msg = NOTIFICATION_MESSAGES.AUTH.OTP_RESENT;
+        notification.success(msg.message, msg.description, msg.duration);
       } catch (error) {
-        notification.error({
-          message: 'Failed to Resend OTP',
-          description: 'Please try again in a few moments.',
-          icon: <CloseCircleOutlined style={{ color: '#ff4d4f' }} />,
-          duration: 4,
-        });
+        const msg = NOTIFICATION_MESSAGES.AUTH.OTP_RESEND_FAILED;
+        notification.error(msg.message, msg.description, msg.duration);
       }
     }
   };

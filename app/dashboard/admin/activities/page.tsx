@@ -1,23 +1,20 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { App } from 'antd';
 import {
   Card,
   Typography,
   Tag,
-  Select,
   Space,
   Avatar,
-  Tooltip,
-  DatePicker,
-  Input,
   Button,
   Modal,
-  Dropdown,
   theme
 } from 'antd';
 import UnifiedTable from '@/components/shared/UnifiedTable';
+import UnifiedSearchFilters from '@/components/shared/UnifiedSearchFilters';
+import UnifiedSummaryCards from '@/components/shared/UnifiedSummaryCards';
 import {
   HistoryOutlined,
   UserOutlined,
@@ -26,16 +23,12 @@ import {
   CloseCircleOutlined,
   UserSwitchOutlined,
   KeyOutlined,
-  ReloadOutlined,
-  DownloadOutlined,
-  ClearOutlined,
-  DeleteOutlined
+  DeleteOutlined,
+  FileTextOutlined
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import ActivitiesFilters from '@/components/admin/activities/ActivitiesFilters';
 
 const { Title, Text } = Typography;
-const { RangePicker } = DatePicker;
 
 interface Activity {
   _id: string;
@@ -59,7 +52,6 @@ const AdminActivitiesPage: React.FC = () => {
   const [filterType, setFilterType] = useState<string>('');
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>(null);
   const [searchText, setSearchText] = useState<string>('');
-  const [userIdFilter, setUserIdFilter] = useState<string>('');
   const [clearLoading, setClearLoading] = useState(false);
   const [pageSize, setPageSize] = useState<number>(20);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -87,13 +79,13 @@ const AdminActivitiesPage: React.FC = () => {
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Fetch activities
-  const fetchActivities = async (
+  const fetchActivities = useCallback(async (
     type?: string,
     dates?: [dayjs.Dayjs | null, dayjs.Dayjs | null] | null,
     search?: string,
     userId?: string,
     page: number = 1,
-    size: number = pageSize
+    size: number = 20
   ) => {
     setLoading(true);
     try {
@@ -122,30 +114,33 @@ const AdminActivitiesPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchActivities(filterType || undefined, dateRange, searchText || undefined, userIdFilter || undefined, currentPage, pageSize);
-  }, [filterType, dateRange, searchText, userIdFilter, currentPage, pageSize]);
+    fetchActivities(filterType || undefined, dateRange, searchText || undefined, undefined, currentPage, pageSize);
+  }, [fetchActivities, filterType, dateRange, searchText, currentPage, pageSize]);
 
   // Handle filter change
-  const handleFilterChange = (value: string) => {
-    setFilterType(value);
+  const handleFilterChange = (value: string | number | [string, string] | undefined) => {
+    setFilterType(value as string);
   };
 
   // Handle date range change
-  const handleDateRangeChange = (dates: [dayjs.Dayjs | null, dayjs.Dayjs | null] | null, _dateStrings?: [string, string]) => {
-    setDateRange(dates);
+  const handleDateRangeChange = (value: string | number | [string, string] | undefined) => {
+    if (Array.isArray(value) && value.length === 2) {
+      const [start, end] = value;
+      setDateRange([
+        start ? dayjs(start) : null,
+        end ? dayjs(end) : null
+      ]);
+    } else {
+      setDateRange(null);
+    }
   };
 
   // Handle search change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchText(e.target.value);
-  };
-
-  // Handle user ID change
-  const handleUserIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setUserIdFilter(e.target.value);
   };
 
   // Handle refresh
@@ -154,12 +149,50 @@ const AdminActivitiesPage: React.FC = () => {
       type: filterType || undefined,
       dateRange: dateRange,
       search: searchText || undefined,
-      userId: userIdFilter || undefined
     };
 
-    fetchActivities(currentFilters.type, currentFilters.dateRange, currentFilters.search, currentFilters.userId);
-
+    fetchActivities(currentFilters.type, currentFilters.dateRange, currentFilters.search, undefined);
   };
+
+  // Summary cards data
+  const summaryData = [
+    {
+      title: 'Total Activities',
+      value: totalActivities,
+      icon: <HistoryOutlined />,
+      color: '#1890ff',
+    },
+    {
+      title: 'User Logins',
+      value: activities.filter(a => a.type === 'user_login').length,
+      icon: <UserOutlined />,
+      color: '#52c41a',
+    },
+    {
+      title: 'User Signups',
+      value: activities.filter(a => a.type === 'user_signup').length,
+      icon: <UserOutlined />,
+      color: '#13c2c2',
+    },
+    {
+      title: 'Admin Actions',
+      value: activities.filter(a => a.type === 'admin_action').length,
+      icon: <UserSwitchOutlined />,
+      color: '#722ed1',
+    },
+    {
+      title: 'Email Sent',
+      value: activities.filter(a => a.type === 'email_sent').length,
+      icon: <MailOutlined />,
+      color: '#faad14',
+    },
+    {
+      title: 'Quotation Actions',
+      value: activities.filter(a => a.type === 'quotation_action').length,
+      icon: <FileTextOutlined />,
+      color: '#ff4d4f',
+    },
+  ];
 
   // Show confirmation modal
   const showConfirmModal = (title: string, content: string, period: string) => {
@@ -232,6 +265,13 @@ const AdminActivitiesPage: React.FC = () => {
     }
   };
 
+  // Handle reset filters
+  const handleResetFilters = () => {
+    setSearchText('');
+    setFilterType('');
+    setDateRange(null);
+  };
+
   // Handle clear activity
   const handleClearActivity = async (period: string) => {
     setClearLoading(true);
@@ -254,7 +294,7 @@ const AdminActivitiesPage: React.FC = () => {
         });
 
         // Refresh the activities list
-        fetchActivities(filterType || undefined, dateRange, searchText || undefined, userIdFilter || undefined, 1, pageSize);
+        fetchActivities(filterType || undefined, dateRange, searchText || undefined, undefined, 1, pageSize);
         setCurrentPage(1); // Reset to first page on clear
       } else {
         const error = await response.json();
@@ -297,10 +337,10 @@ const AdminActivitiesPage: React.FC = () => {
           // If current page is empty and not the first page, go to previous page
           const newPage = currentPage - 1;
           setCurrentPage(newPage);
-          fetchActivities(filterType || undefined, dateRange, searchText || undefined, userIdFilter || undefined, newPage, pageSize);
+          fetchActivities(filterType || undefined, dateRange, searchText || undefined, undefined, newPage, pageSize);
         } else if (remainingItems < pageSize && totalActivities - 1 > (currentPage - 1) * pageSize) {
           // If current page has fewer items than pageSize, refetch to ensure consistency
-          fetchActivities(filterType || undefined, dateRange, searchText || undefined, userIdFilter || undefined, currentPage, pageSize);
+          fetchActivities(filterType || undefined, dateRange, searchText || undefined, undefined, currentPage, pageSize);
         }
       } else {
         const error = await response.json();
@@ -605,7 +645,7 @@ const AdminActivitiesPage: React.FC = () => {
   ];
 
   return (
-    <div className="px-2 md:px-0">
+    <div className="px-2 md:px-0 w-full overflow-hidden">
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
         <div className="mb-4 md:mb-0">
           <Title level={2} style={{ margin: 0 }} className="text-lg md:text-2xl">
@@ -618,21 +658,52 @@ const AdminActivitiesPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Summary Cards */}
+      <UnifiedSummaryCards 
+        data={summaryData}
+        loading={loading}
+        style={{ marginBottom: 24 }}
+      />
+
       {/* Filters */}
-      <ActivitiesFilters
+      <UnifiedSearchFilters
         searchText={searchText}
         onSearchTextChange={handleSearchChange}
-        userIdFilter={userIdFilter}
-        onUserIdChange={handleUserIdChange}
-        filterType={filterType}
-        onFilterTypeChange={handleFilterChange}
-        dateRange={dateRange}
-        onDateRangeChange={handleDateRangeChange}
+        searchPlaceholder="Search activities, user emails, descriptions, or user IDs..."
+        filters={[
+          {
+            key: 'type',
+            type: 'select',
+            placeholder: 'Filter by activity type',
+            value: filterType,
+            onChange: handleFilterChange,
+            options: [
+              { value: 'user_signup', label: 'User Signup' },
+              { value: 'user_login', label: 'User Login' },
+              { value: 'profile_approved', label: 'Profile Approved' },
+              { value: 'profile_rejected', label: 'Profile Rejected' },
+              { value: 'user_activated', label: 'User Activated' },
+              { value: 'user_deactivated', label: 'User Deactivated' },
+              { value: 'email_sent', label: 'Email Sent' },
+              { value: 'password_reset', label: 'Password Reset' },
+              { value: 'admin_action', label: 'Admin Action' },
+              { value: 'quotation_action', label: 'Quotation Action' },
+            ],
+          },
+          {
+            key: 'dateRange',
+            type: 'dateRange',
+            value: dateRange ? [dateRange[0]?.format('YYYY-MM-DD') || '', dateRange[1]?.format('YYYY-MM-DD') || ''] : undefined,
+            onChange: handleDateRangeChange,
+          },
+        ]}
         onRefresh={handleRefresh}
-        onExportCSV={handleExportCSV}
+        onExport={handleExportCSV}
+        onReset={handleResetFilters}
         clearMenuItems={clearMenuItems}
         clearLoading={clearLoading}
         loading={loading}
+        showClear={true}
       />
 
       {/* Activities Table */}

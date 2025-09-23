@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import connectToDatabase from '../db/mongodb';
 import EmailTemplate from '../db/models/EmailTemplate';
+import { logSystemActivity } from '../utils/activity';
 
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
@@ -37,7 +38,7 @@ const getActiveTemplate = async (type: string) => {
 export const sendOTPEmail = async (email: string, otp: string, name?: string) => {
   try {
     // Try to get template, fallback to default if not found
-    const template = await getActiveTemplate('otp');
+    const template = await getActiveTemplate('auth_otp');
 
     let subject: string;
     let htmlContent: string;
@@ -79,8 +80,20 @@ export const sendOTPEmail = async (email: string, otp: string, name?: string) =>
       html: htmlContent,
     };
 
-    const info = await transporter.sendMail(mailOptions);
-    // Debug log removed
+    await transporter.sendMail(mailOptions);
+    
+    // Log email activity
+    await logSystemActivity(
+      'email_sent',
+      `OTP email sent to ${email}`,
+      {
+        templateType: 'auth_otp',
+        recipient: email,
+        recipientName: name || 'User',
+        sentAt: new Date().toISOString()
+      }
+    );
+    
     return true;
   } catch (error) {
     console.error('Error sending OTP email:', error);
@@ -91,7 +104,7 @@ export const sendOTPEmail = async (email: string, otp: string, name?: string) =>
 export const sendWelcomeEmail = async (email: string, name: string) => {
   try {
     // Try to get template, fallback to default if not found
-    const template = await getActiveTemplate('welcome');
+    const template = await getActiveTemplate('auth_welcome');
 
     let subject: string;
     let htmlContent: string;
@@ -136,8 +149,20 @@ export const sendWelcomeEmail = async (email: string, name: string) => {
       html: htmlContent,
     };
 
-    const info = await transporter.sendMail(mailOptions);
-    // Debug log removed
+    await transporter.sendMail(mailOptions);
+    
+    // Log email activity
+    await logSystemActivity(
+      'email_sent',
+      `Welcome email sent to ${email}`,
+      {
+        templateType: 'auth_welcome',
+        recipient: email,
+        recipientName: name,
+        sentAt: new Date().toISOString()
+      }
+    );
+    
     return true;
   } catch (error) {
     console.error('Error sending welcome email:', error);
@@ -148,7 +173,7 @@ export const sendWelcomeEmail = async (email: string, name: string) => {
 export const sendApprovalEmail = async (email: string, name: string) => {
   try {
     // Try to get template, fallback to default if not found
-    const template = await getActiveTemplate('approval');
+    const template = await getActiveTemplate('auth_approval');
 
     let subject: string;
     let htmlContent: string;
@@ -192,8 +217,20 @@ export const sendApprovalEmail = async (email: string, name: string) => {
       html: htmlContent,
     };
 
-    const info = await transporter.sendMail(mailOptions);
-    // Debug log removed
+    await transporter.sendMail(mailOptions);
+    
+    // Log email activity
+    await logSystemActivity(
+      'email_sent',
+      `Approval email sent to ${email}`,
+      {
+        templateType: 'auth_approval',
+        recipient: email,
+        recipientName: name,
+        sentAt: new Date().toISOString()
+      }
+    );
+    
     return true;
   } catch (error) {
     console.error('Error sending approval email:', error);
@@ -204,7 +241,7 @@ export const sendApprovalEmail = async (email: string, name: string) => {
 export const sendRejectionEmail = async (email: string, name: string, reason?: string) => {
   try {
     // Try to get template, fallback to default if not found
-    const template = await getActiveTemplate('rejection');
+    const template = await getActiveTemplate('auth_rejection');
 
     let subject: string;
     let htmlContent: string;
@@ -250,8 +287,21 @@ export const sendRejectionEmail = async (email: string, name: string, reason?: s
       html: htmlContent,
     };
 
-    const info = await transporter.sendMail(mailOptions);
-    // Debug log removed
+    await transporter.sendMail(mailOptions);
+    
+    // Log email activity
+    await logSystemActivity(
+      'email_sent',
+      `Rejection email sent to ${email}`,
+      {
+        templateType: 'auth_rejection',
+        recipient: email,
+        recipientName: name,
+        reason: reason || 'Not specified',
+        sentAt: new Date().toISOString()
+      }
+    );
+    
     return true;
   } catch (error) {
     console.error('Error sending rejection email:', error);
@@ -262,7 +312,7 @@ export const sendRejectionEmail = async (email: string, name: string, reason?: s
 export const sendProfileSubmittedEmail = async (email: string, name: string) => {
   try {
     // Try to get template, fallback to default if not found
-    const template = await getActiveTemplate('profile_submitted');
+    const template = await getActiveTemplate('auth_profile_submitted');
 
     let subject: string;
     let htmlContent: string;
@@ -316,8 +366,20 @@ export const sendProfileSubmittedEmail = async (email: string, name: string) => 
       html: htmlContent,
     };
 
-    const info = await transporter.sendMail(mailOptions);
-    // Debug log removed
+    await transporter.sendMail(mailOptions);
+    
+    // Log email activity
+    await logSystemActivity(
+      'email_sent',
+      `Profile submitted email sent to ${email}`,
+      {
+        templateType: 'auth_profile_submitted',
+        recipient: email,
+        recipientName: name,
+        sentAt: new Date().toISOString()
+      }
+    );
+    
     return true;
   } catch (error) {
     console.error('Error sending profile submitted email:', error);
@@ -328,7 +390,7 @@ export const sendProfileSubmittedEmail = async (email: string, name: string) => 
 export const sendAdminUserVerificationEmail = async (email: string, name: string, token: string) => {
   try {
     // Try to get template, fallback to default if not found
-    const template = await getActiveTemplate('admin_user_verification');
+    const template = await getActiveTemplate('auth_admin_user_verification');
 
     let subject: string;
     let htmlContent: string;
@@ -379,8 +441,21 @@ export const sendAdminUserVerificationEmail = async (email: string, name: string
       html: htmlContent,
     };
 
-    const info = await transporter.sendMail(mailOptions);
-    // Debug log removed
+    await transporter.sendMail(mailOptions);
+    
+    // Log email activity
+    await logSystemActivity(
+      'email_sent',
+      `Admin user verification email sent to ${email}`,
+      {
+        templateType: 'auth_admin_user_verification',
+        recipient: email,
+        recipientName: name,
+        verificationToken: token,
+        sentAt: new Date().toISOString()
+      }
+    );
+    
     return true;
   } catch (error) {
     console.error('Error sending admin user verification email:', error);
@@ -391,7 +466,7 @@ export const sendAdminUserVerificationEmail = async (email: string, name: string
 export const sendReApprovalEmail = async (email: string, name: string) => {
   try {
     // Try to get template, fallback to default if not found
-    const template = await getActiveTemplate('reapproval');
+    const template = await getActiveTemplate('auth_reapproval');
 
     let subject: string;
     let htmlContent: string;
@@ -444,8 +519,20 @@ export const sendReApprovalEmail = async (email: string, name: string) => {
       html: htmlContent,
     };
 
-    const info = await transporter.sendMail(mailOptions);
-    // Debug log removed
+    await transporter.sendMail(mailOptions);
+    
+    // Log email activity
+    await logSystemActivity(
+      'email_sent',
+      `Re-approval email sent to ${email}`,
+      {
+        templateType: 'auth_reapproval',
+        recipient: email,
+        recipientName: name,
+        sentAt: new Date().toISOString()
+      }
+    );
+    
     return true;
   } catch (error) {
     console.error('Error sending re-approval email:', error);
@@ -532,8 +619,22 @@ export const sendQuotationEmail = async (options: {
       html: htmlContent,
     };
 
-    const info = await transporter.sendMail(mailOptions);
-    // Debug log removed
+    await transporter.sendMail(mailOptions);
+    
+    // Log email activity
+    await logSystemActivity(
+      'email_sent',
+      `Quotation email sent to ${options.to}`,
+      {
+        templateType: 'quotation',
+        recipient: options.to,
+        recipientName: options.clientName,
+        quotationTitle: options.quotationTitle,
+        quotationId: options.quotationId,
+        sentAt: new Date().toISOString()
+      }
+    );
+    
     return true;
   } catch (error) {
     console.error('Error sending quotation email:', error);
@@ -577,7 +678,19 @@ export const sendEmailTemplate = async (options: {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    // Debug log removed
+    
+    // Log email activity
+    await logSystemActivity(
+      'email_sent',
+      `Email sent using template "${templateType}" to ${to}`,
+      {
+        templateType,
+        recipient: to,
+        messageId: info.messageId,
+        sentAt: new Date().toISOString()
+      }
+    );
+    
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error(`❌ Error sending email with template "${options.templateType}":`, error);

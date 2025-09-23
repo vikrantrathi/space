@@ -2,6 +2,8 @@
 
 import React, { useEffect } from 'react';
 import { Layout, Menu, Avatar, Dropdown, Typography, Button, Spin, App, theme } from 'antd';
+import { useNotification } from '@/lib/utils/notification';
+import { NOTIFICATION_MESSAGES } from '@/lib/utils/notificationMessages';
 import {
   DashboardOutlined,
   SettingOutlined,
@@ -10,7 +12,6 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   HistoryOutlined,
-  CheckCircleOutlined,
   MailOutlined,
   FileTextOutlined,
   BulbOutlined,
@@ -32,7 +33,7 @@ interface DashboardLayoutProps {
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
-  const { notification } = App.useApp();
+  const notification = useNotification();
   const { user, logout, isAuthenticated, isLoading } = useAuth();
   const { setLoading: setGlobalLoading } = useGlobalLoader();
   const [collapsed, setCollapsed] = useState(false);
@@ -232,12 +233,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
    ];
 
   const handleLogout = () => {
-    notification.success({
-      message: 'Logged Out Successfully',
-      description: 'You have been logged out. Redirecting to login page...',
-      icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
-      duration: 2,
-    });
+    const msg = NOTIFICATION_MESSAGES.AUTH.LOGOUT_SUCCESS;
+    notification.success(msg.message, msg.description, msg.duration);
     logout();
   };
 
@@ -386,7 +383,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               </Dropdown>
             </div>
           </Header>
-          <Content style={{ margin: '4px 6px 0', padding: '12px', background: token.colorBgContainer, minHeight: 280 }} className="p-3 md:p-6">
+          <Content style={{ margin: '4px 6px 0', padding: '12px', background: token.colorBgContainer, minHeight: 280, overflow: 'hidden' }} className="p-3 md:p-6">
             {children}
           </Content>
         </Layout>

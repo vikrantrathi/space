@@ -16,6 +16,9 @@ import {
 } from 'antd';
 import type { TablePaginationConfig } from 'antd';
 import UnifiedTable from '@/components/shared/UnifiedTable';
+import UnifiedSearchFilters from '@/components/shared/UnifiedSearchFilters';
+import UnifiedSummaryCards from '@/components/shared/UnifiedSummaryCards';
+import { exportQuotations } from '@/utils/exportUtils';
 import {
   FileTextOutlined,
   CheckCircleOutlined,
@@ -29,6 +32,7 @@ import {
   ReloadOutlined
 } from '@ant-design/icons';
 import { useAuth } from '@/lib/auth/auth-context';
+import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
 
@@ -125,6 +129,13 @@ const AdminQuotationsView: React.FC = () => {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('all');
   const [users, setUsers] = useState<User[]>([]);
+  
+  // Search and filter states
+  const [searchText, setSearchText] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>(null);
+  const [exportLoading, setExportLoading] = useState(false);
+  
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,
@@ -201,15 +212,45 @@ const AdminQuotationsView: React.FC = () => {
     }
   };
 
-  // Filter quotations based on active tab
+  // Filter quotations based on active tab, search text, and filters
   const getFilteredQuotations = () => {
+    let filtered = quotations;
+
+    // Apply tab filter
     if (activeTab === 'draft') {
-      return quotations.filter(q => q.status === 'draft');
+      filtered = filtered.filter(q => q.status === 'draft');
+    } else if (activeTab === 'sent') {
+      filtered = filtered.filter(q => q.status === 'sent');
     }
-    if (activeTab === 'sent') {
-      return quotations.filter(q => q.status === 'sent');
+
+    // Apply search filter
+    if (searchText) {
+      const searchLower = searchText.toLowerCase();
+      filtered = filtered.filter(q => 
+        q.title.toLowerCase().includes(searchLower) ||
+        q.clientName?.toLowerCase().includes(searchLower) ||
+        q.clientEmail?.toLowerCase().includes(searchLower) ||
+        q.clientCompany?.toLowerCase().includes(searchLower) ||
+        q.projectDescription?.toLowerCase().includes(searchLower)
+      );
     }
-    return quotations;
+
+    // Apply status filter
+    if (statusFilter) {
+      filtered = filtered.filter(q => q.status === statusFilter);
+    }
+
+    // Apply date range filter
+    if (dateRange && dateRange[0] && dateRange[1]) {
+      const startDate = dateRange[0].startOf('day');
+      const endDate = dateRange[1].endOf('day');
+      filtered = filtered.filter(q => {
+        const createdAt = dayjs(q.createdAt);
+        return createdAt.isAfter(startDate) && createdAt.isBefore(endDate);
+      });
+    }
+
+    return filtered;
   };
 
   const handleTableChange = (paginationConfig: TablePaginationConfig) => {
@@ -219,6 +260,100 @@ const AdminQuotationsView: React.FC = () => {
       pageSize: paginationConfig.pageSize || 10,
     }));
   };
+
+  // Export function
+  const handleExport = () => {
+    setExportLoading(true);
+    try {
+      const filteredData = getFilteredQuotations();
+      exportQuotations(filteredData, `quotations_${new Date().toISOString().split('T')[0]}.csv`);
+      notification.success({
+        message: 'Export Successful',
+        description: `Exported ${filteredData.length} quotations to CSV`,
+        duration: 3,
+      });
+    } catch (error) {
+      notification.error({
+        message: 'Export Failed',
+        description: 'Failed to export quotations. Please try again.',
+        duration: 4,
+      });
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  // Filter handlers
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchText(e.target.value);
+  };
+
+  const handleStatusFilterChange = (value: string | number | [string, string] | undefined) => {
+    setStatusFilter(value as string);
+  };
+
+  const handleDateRangeChange = (value: string | number | [string, string] | undefined) => {
+    if (Array.isArray(value) && value.length === 2) {
+      const [start, end] = value;
+      setDateRange([
+        start ? dayjs(start) : null,
+        end ? dayjs(end) : null
+      ]);
+    } else {
+      setDateRange(null);
+    }
+  };
+
+  const handleRefresh = () => {
+    fetchQuotations();
+  };
+
+  // Handle reset filters
+  const handleResetFilters = () => {
+    setSearchText('');
+    setStatusFilter('');
+    setDateRange(null);
+  };
+
+  // Summary cards data
+  const summaryData = [
+    {
+      title: 'Total Quotations',
+      value: quotations.length,
+      icon: <FileTextOutlined />,
+      color: '#1890ff',
+    },
+    {
+      title: 'Draft Quotations',
+      value: quotations.filter(q => q.status === 'draft').length,
+      icon: <FileTextOutlined />,
+      color: '#faad14',
+    },
+    {
+      title: 'Sent Quotations',
+      value: quotations.filter(q => q.status === 'sent').length,
+      icon: <CheckCircleOutlined />,
+      color: '#52c41a',
+    },
+    {
+      title: 'Accepted Quotations',
+      value: quotations.filter(q => q.status === 'accepted').length,
+      icon: <CheckCircleOutlined />,
+      color: '#52c41a',
+    },
+    {
+      title: 'Rejected Quotations',
+      value: quotations.filter(q => q.status === 'rejected').length,
+      icon: <CloseCircleOutlined />,
+      color: '#ff4d4f',
+    },
+    {
+      title: 'Total Views',
+      value: quotations.reduce((sum, q) => sum + (q.viewCount || 0), 0),
+      icon: <EyeOutlined />,
+      color: '#722ed1',
+    },
+  ];
 
   // Ref to prevent multiple rapid API calls
   const isFetchingRef = useRef(false);
@@ -998,15 +1133,49 @@ const AdminQuotationsView: React.FC = () => {
         </span>
       ),
       children: (
+        <>
+          <UnifiedSearchFilters
+            searchText={searchText}
+            onSearchTextChange={handleSearchChange}
+            searchPlaceholder="Search quotations by title, client, or description..."
+            filters={[
+              {
+                key: 'status',
+                type: 'select',
+                placeholder: 'Filter by status',
+                value: statusFilter,
+                onChange: handleStatusFilterChange,
+                options: [
+                  { value: 'draft', label: 'Draft' },
+                  { value: 'sent', label: 'Sent' },
+                  { value: 'accepted', label: 'Accepted' },
+                  { value: 'rejected', label: 'Rejected' },
+                  { value: 'revision', label: 'Revision' },
+                ],
+              },
+              {
+                key: 'dateRange',
+                type: 'dateRange',
+                value: dateRange ? [dateRange[0]?.format('YYYY-MM-DD') || '', dateRange[1]?.format('YYYY-MM-DD') || ''] : undefined,
+                onChange: handleDateRangeChange,
+              },
+            ]}
+            onRefresh={handleRefresh}
+            onExport={handleExport}
+            onReset={handleResetFilters}
+            loading={loading}
+            exportLoading={exportLoading}
+          />
         <UnifiedTable
           columns={columns}
-          dataSource={quotations}
+            dataSource={getFilteredQuotations()}
           loading={loading}
           rowKey="_id"
           pagination={pagination}
           onChange={handleTableChange}
           scroll={{ x: 800 }}
         />
+        </>
       ),
     },
     {
@@ -1018,6 +1187,25 @@ const AdminQuotationsView: React.FC = () => {
         </span>
       ),
       children: (
+        <>
+          <UnifiedSearchFilters
+            searchText={searchText}
+            onSearchTextChange={handleSearchChange}
+            searchPlaceholder="Search draft quotations..."
+            filters={[
+              {
+                key: 'dateRange',
+                type: 'dateRange',
+                value: dateRange ? [dateRange[0]?.format('YYYY-MM-DD') || '', dateRange[1]?.format('YYYY-MM-DD') || ''] : undefined,
+                onChange: handleDateRangeChange,
+              },
+            ]}
+            onRefresh={handleRefresh}
+            onExport={handleExport}
+            onReset={handleResetFilters}
+            loading={loading}
+            exportLoading={exportLoading}
+          />
         <UnifiedTable
           columns={columns}
           dataSource={getFilteredQuotations()}
@@ -1028,6 +1216,7 @@ const AdminQuotationsView: React.FC = () => {
           scroll={{ x: 800 }}
           locale={{ emptyText: 'No draft quotations' }}
         />
+        </>
       ),
     },
     {
@@ -1039,6 +1228,25 @@ const AdminQuotationsView: React.FC = () => {
         </span>
       ),
       children: (
+        <>
+          <UnifiedSearchFilters
+            searchText={searchText}
+            onSearchTextChange={handleSearchChange}
+            searchPlaceholder="Search sent quotations..."
+            filters={[
+              {
+                key: 'dateRange',
+                type: 'dateRange',
+                value: dateRange ? [dateRange[0]?.format('YYYY-MM-DD') || '', dateRange[1]?.format('YYYY-MM-DD') || ''] : undefined,
+                onChange: handleDateRangeChange,
+              },
+            ]}
+            onRefresh={handleRefresh}
+            onExport={handleExport}
+            onReset={handleResetFilters}
+            loading={loading}
+            exportLoading={exportLoading}
+          />
         <UnifiedTable
           columns={columns}
           dataSource={getFilteredQuotations()}
@@ -1049,6 +1257,7 @@ const AdminQuotationsView: React.FC = () => {
           scroll={{ x: 800 }}
           locale={{ emptyText: 'No sent quotations' }}
         />
+        </>
       ),
     },
   ];
@@ -1066,16 +1275,6 @@ const AdminQuotationsView: React.FC = () => {
           </Text>
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
-          <Button
-            type="default"
-            icon={<ReloadOutlined />}
-            onClick={fetchQuotations}
-            loading={loading}
-            size="large"
-            className="w-full sm:w-auto"
-          >
-            <span className="hidden sm:inline">Refresh</span>
-          </Button>
           <Button
             type="default"
             icon={<EditOutlined />}
@@ -1096,6 +1295,13 @@ const AdminQuotationsView: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      {/* Summary Cards */}
+      <UnifiedSummaryCards 
+        data={summaryData}
+        loading={loading}
+        style={{ marginBottom: 24 }}
+      />
 
       <Card>
         <Tabs

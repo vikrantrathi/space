@@ -18,6 +18,8 @@ import {
   theme
 } from 'antd';
 import UnifiedTable from '@/components/shared/UnifiedTable';
+import UnifiedSearchFilters from '@/components/shared/UnifiedSearchFilters';
+import { exportActivities } from '@/utils/exportUtils';
 import {
   HistoryOutlined,
   UserOutlined,
@@ -62,7 +64,7 @@ const ClientActivitiesPage: React.FC = () => {
   const [totalActivities, setTotalActivities] = useState(0);
   const [searchText, setSearchText] = useState('');
   const [filterType, setFilterType] = useState('all');
-  const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null);
+  const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>(null);
 
   // Fetch activities for the current client
   const fetchActivities = async () => {
@@ -76,7 +78,7 @@ const ClientActivitiesPage: React.FC = () => {
         limit: pageSize.toString(),
         ...(searchText && { search: searchText }),
         ...(filterType !== 'all' && { type: filterType }),
-        ...(dateRange && {
+        ...(dateRange && dateRange[0] && dateRange[1] && {
           startDate: dateRange[0].toISOString(),
           endDate: dateRange[1].toISOString(),
         }),
@@ -119,19 +121,30 @@ const ClientActivitiesPage: React.FC = () => {
     fetchActivities();
   };
 
+  // Handle reset filters
+  const handleResetFilters = () => {
+    setSearchText('');
+    setFilterType('');
+    setDateRange(null);
+  };
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchText(e.target.value);
     setCurrentPage(1);
   };
 
-  const handleFilterChange = (value: string) => {
-    setFilterType(value);
+  const handleFilterChange = (value: string | number | [string, string] | undefined) => {
+    setFilterType(value as string);
     setCurrentPage(1);
   };
 
-  const handleDateRangeChange = (dates: [dayjs.Dayjs | null, dayjs.Dayjs | null] | null) => {
-    if (dates && dates[0] && dates[1]) {
-      setDateRange([dates[0], dates[1]]);
+  const handleDateRangeChange = (value: string | number | [string, string] | undefined) => {
+    if (Array.isArray(value) && value.length === 2) {
+      const [start, end] = value;
+      setDateRange([
+        start ? dayjs(start) : null,
+        end ? dayjs(end) : null
+      ]);
     } else {
       setDateRange(null);
     }
@@ -246,44 +259,51 @@ const ClientActivitiesPage: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <Card style={{ marginBottom: 24 }}>
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-          <div className="w-full sm:w-auto sm:min-w-[200px] sm:flex-1">
-            <Input
-              placeholder="Search activities..."
-              value={searchText}
-              onChange={handleSearchChange}
-              prefix={<HistoryOutlined />}
-              allowClear
-              className="w-full"
-            />
-          </div>
-          <div className="w-full sm:w-auto sm:min-w-[150px]">
-            <Select
-              value={filterType}
-              onChange={handleFilterChange}
-              className="w-full"
-              options={filterOptions}
-            />
-          </div>
-          <div className="w-full sm:w-auto sm:min-w-[200px]">
-            <RangePicker
-              value={dateRange}
-              onChange={handleDateRangeChange}
-              className="w-full"
-              placeholder={['Start Date', 'End Date']}
-            />
-          </div>
-          <Button
-            icon={<ReloadOutlined />}
-            onClick={handleRefresh}
-            loading={loading}
-            className="w-full sm:w-auto"
-          >
-            <span className="hidden sm:inline">Refresh</span>
-          </Button>
-        </div>
-      </Card>
+      <UnifiedSearchFilters
+        searchText={searchText}
+        onSearchTextChange={handleSearchChange}
+        searchPlaceholder="Search activities..."
+        filters={[
+          {
+            key: 'type',
+            type: 'select',
+            placeholder: 'Filter by activity type',
+            value: filterType,
+            onChange: handleFilterChange,
+            options: filterOptions,
+          },
+          {
+            key: 'dateRange',
+            type: 'dateRange',
+            value: dateRange ? [dateRange[0]?.format('YYYY-MM-DD') || '', dateRange[1]?.format('YYYY-MM-DD') || ''] : undefined,
+            onChange: handleDateRangeChange,
+          },
+        ]}
+        onRefresh={handleRefresh}
+        onReset={handleResetFilters}
+        onExport={() => {
+          const filteredData = activities.filter(activity => {
+            let matches = true;
+            if (searchText) {
+              matches = matches && (
+                activity.description.toLowerCase().includes(searchText.toLowerCase()) ||
+                activity.type.toLowerCase().includes(searchText.toLowerCase())
+              );
+            }
+            if (filterType !== 'all') {
+              matches = matches && activity.type === filterType;
+            }
+            if (dateRange && dateRange[0] && dateRange[1]) {
+              const activityDate = dayjs(activity.createdAt);
+              matches = matches && activityDate.isAfter(dateRange[0]) && activityDate.isBefore(dateRange[1]);
+            }
+            return matches;
+          });
+          exportActivities(filteredData, `my_activities_${new Date().toISOString().split('T')[0]}.csv`);
+        }}
+        loading={loading}
+        showExport={true}
+      />
 
       {/* Activities Table */}
       <Card style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>

@@ -21,7 +21,15 @@ function AntdBridge({ children }: { children: ReactNode }) {
       componentSize="middle"
     >
       <NotificationConfig />
-      <AntApp>{children}</AntApp>
+      <AntApp 
+        notification={{
+          placement: 'bottomRight',
+          duration: 4,
+          maxCount: 3,
+        }}
+      >
+        {children}
+      </AntApp>
     </ConfigProvider>
   );
 }

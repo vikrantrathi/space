@@ -12,7 +12,7 @@ export const defaultTemplates = [
   // ===== AUTHENTICATION TEMPLATES =====
   {
     name: 'Welcome Email',
-    type: 'welcome',
+    type: 'auth_welcome',
     subject: 'Welcome to Startupzila Space!',
     htmlContent: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -58,7 +58,7 @@ export const defaultTemplates = [
   },
   {
     name: 'Profile Approval',
-    type: 'approval',
+    type: 'auth_approval',
     subject: 'Your Profile Has Been Approved!',
     htmlContent: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -103,7 +103,7 @@ export const defaultTemplates = [
   },
   {
     name: 'Profile Rejection',
-    type: 'rejection',
+    type: 'auth_rejection',
     subject: 'Profile Review Update',
     htmlContent: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -143,7 +143,7 @@ export const defaultTemplates = [
   },
   {
     name: 'OTP Verification',
-    type: 'otp',
+    type: 'auth_otp',
     subject: 'Your Verification Code',
     htmlContent: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -178,7 +178,7 @@ export const defaultTemplates = [
   },
   {
     name: 'Password Reset',
-    type: 'password_reset',
+    type: 'auth_password_reset',
     subject: 'Reset Your Password',
     htmlContent: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -215,7 +215,7 @@ export const defaultTemplates = [
   },
   {
     name: 'Admin Notification',
-    type: 'admin_notification',
+    type: 'auth_admin_notification',
     subject: 'New User Registration Alert',
     htmlContent: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -255,7 +255,7 @@ export const defaultTemplates = [
   },
   {
     name: 'Profile Submitted',
-    type: 'profile_submitted',
+    type: 'auth_profile_submitted',
     subject: 'Profile Submitted for Approval - Startupzila Space',
     htmlContent: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -307,7 +307,7 @@ export const defaultTemplates = [
   },
   {
     name: 'Profile Re-Approval',
-    type: 'reapproval',
+    type: 'auth_reapproval',
     subject: 'Profile Re-Approved - Startupzila Space',
     htmlContent: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -362,7 +362,7 @@ export const defaultTemplates = [
   },
   {
     name: 'Admin User Verification',
-    type: 'admin_user_verification',
+    type: 'auth_admin_user_verification',
     subject: 'Complete Your Account Setup - Startupzila Space',
     htmlContent: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">

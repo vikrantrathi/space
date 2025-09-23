@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
 
     // Log password reset activity
     const resetActivity = new Activity({
-      type: 'password_reset',
+      type: 'auth_password_reset',
       description: `Password reset completed for user ${user.name} (${user.email})`,
       userId: user._id,
       userEmail: user.email,

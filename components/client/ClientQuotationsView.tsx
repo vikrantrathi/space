@@ -5,7 +5,6 @@ import {
   Tag,
   Typography,
   Card,
-  App,
   Button,
   Tooltip,
   theme,
@@ -15,11 +14,16 @@ import {
   Space,
 } from 'antd';
 import UnifiedTable from '@/components/shared/UnifiedTable';
+import UnifiedSearchFilters from '@/components/shared/UnifiedSearchFilters';
+import UnifiedSummaryCards from '@/components/shared/UnifiedSummaryCards';
 import {
   FileTextOutlined,
   EyeOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '@/lib/auth/auth-context';
+import { useNotification } from '@/lib/utils/notification';
+import { NOTIFICATION_MESSAGES } from '@/lib/utils/notificationMessages';
+import dayjs from 'dayjs';
  
 
 const { Title, Text } = Typography;
@@ -30,6 +34,7 @@ interface Quotation {
   status: 'draft' | 'sent' | 'accepted' | 'rejected' | 'revision';
   clientName?: string;
   clientEmail?: string;
+  projectDescription?: string;
   createdAt: string;
   updatedAt: string;
   actions: Array<{
@@ -41,7 +46,7 @@ interface Quotation {
 }
 
 const ClientQuotationsView: React.FC = () => {
-  const { notification, modal } = App.useApp();
+  const notification = useNotification();
   const { token } = theme.useToken();
   const { user } = useAuth();
   const [quotations, setQuotations] = useState<Quotation[]>([]);
@@ -51,6 +56,11 @@ const ClientQuotationsView: React.FC = () => {
   const [selectedAction, setSelectedAction] = useState<'accept' | 'reject' | 'revision' | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [actionForm] = Form.useForm();
+  
+  // Search and filter states
+  const [searchText, setSearchText] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>(null);
 
   // Fetch quotations
   const fetchQuotations = useCallback(async () => {
@@ -59,11 +69,8 @@ const ClientQuotationsView: React.FC = () => {
       const token = localStorage.getItem('token');
 
       if (!token) {
-        notification.error({
-          message: 'Authentication Error',
-          description: 'No authentication token found. Please log in again.',
-          duration: 4,
-        });
+        const msg = NOTIFICATION_MESSAGES.AUTH.LOGIN_FAILED;
+        notification.error(msg.message, msg.description, msg.duration);
         setLoading(false);
         return;
       }
@@ -78,18 +85,12 @@ const ClientQuotationsView: React.FC = () => {
         const data = await response.json();
         setQuotations(data.quotations);
       } else {
-        notification.error({
-          message: 'Failed to Fetch Quotations',
-          description: 'Unable to load your quotations. Please try again.',
-          duration: 4,
-        });
+        const msg = NOTIFICATION_MESSAGES.GENERAL.ERROR;
+        notification.error(msg.message, msg.description, msg.duration);
       }
     } catch {
-      notification.error({
-        message: 'Error Fetching Quotations',
-        description: 'Network error occurred while loading quotations.',
-        duration: 4,
-      });
+      const msg = NOTIFICATION_MESSAGES.GENERAL.ERROR;
+      notification.error(msg.message, msg.description, msg.duration);
     } finally {
       setLoading(false);
     }
@@ -98,6 +99,97 @@ const ClientQuotationsView: React.FC = () => {
   useEffect(() => {
     fetchQuotations();
   }, [fetchQuotations]);
+
+  // Search and filter handlers
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchText(e.target.value);
+  };
+
+  const handleStatusFilterChange = (value: string | number | [string, string] | undefined) => {
+    setStatusFilter(value as string);
+  };
+
+  const handleDateRangeChange = (value: string | number | [string, string] | undefined) => {
+    if (Array.isArray(value) && value.length === 2) {
+      const [start, end] = value;
+      setDateRange([
+        start ? dayjs(start) : null,
+        end ? dayjs(end) : null
+      ]);
+    } else {
+      setDateRange(null);
+    }
+  };
+
+  const handleRefresh = () => {
+    fetchQuotations();
+  };
+
+  const handleResetFilters = () => {
+    setSearchText('');
+    setStatusFilter('');
+    setDateRange(null);
+  };
+
+  // Filter quotations based on search and filters
+  const getFilteredQuotations = () => {
+    let filtered = quotations;
+
+    // Apply search filter
+    if (searchText) {
+      const searchLower = searchText.toLowerCase();
+      filtered = filtered.filter(quotation => 
+        quotation.title.toLowerCase().includes(searchLower) ||
+        quotation.projectDescription?.toLowerCase().includes(searchLower) ||
+        quotation.status.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Apply status filter
+    if (statusFilter) {
+      filtered = filtered.filter(quotation => quotation.status === statusFilter);
+    }
+
+    // Apply date range filter
+    if (dateRange && dateRange[0] && dateRange[1]) {
+      const startDate = dateRange[0].startOf('day');
+      const endDate = dateRange[1].endOf('day');
+      filtered = filtered.filter(quotation => {
+        const createdAt = dayjs(quotation.createdAt);
+        return createdAt.isAfter(startDate) && createdAt.isBefore(endDate);
+      });
+    }
+
+    return filtered;
+  };
+
+  // Summary cards data
+  const summaryData = [
+    {
+      title: 'Total Quotations',
+      value: quotations.length,
+      icon: <FileTextOutlined />,
+      color: '#1890ff',
+    },
+    {
+      title: 'Sent',
+      value: quotations.filter(q => q.status === 'sent').length,
+      icon: <EyeOutlined />,
+      color: '#52c41a',
+    },
+    {
+      title: 'Accepted',
+      value: quotations.filter(q => q.status === 'accepted').length,
+      icon: <EyeOutlined />,
+      color: '#52c41a',
+    },
+    {
+      title: 'Rejected',
+      value: quotations.filter(q => q.status === 'rejected').length,
+      icon: <EyeOutlined />,
+      color: '#ff4d4f',
+    },
+  ];
 
   // Client action handlers (OTP flow)
   const openAction = (quotationId: string, action: 'accept' | 'reject' | 'revision') => {
@@ -120,7 +212,7 @@ const ClientQuotationsView: React.FC = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        notification.error({ message: 'Authentication Error', description: 'No token found. Please log in again.' });
+        notification.error('Authentication Error', 'No token found. Please log in again.');
         setActionLoading(false);
         return;
       }
@@ -138,11 +230,11 @@ const ClientQuotationsView: React.FC = () => {
       if (response.ok) {
         setActionModalOpen(false);
         actionForm.resetFields();
-        notification.success({ message: 'Done', description: 'Your response has been recorded.' });
+        notification.success('Done', 'Your response has been recorded.');
         fetchQuotations();
       } else {
         const err = await response.json();
-        notification.error({ message: 'Failed', description: err.error || 'Unable to send OTP.' });
+        notification.error('Failed', err.error || 'Unable to send OTP.');
       }
     } finally {
       setActionLoading(false);
@@ -318,7 +410,7 @@ const ClientQuotationsView: React.FC = () => {
                     );
                   });
                   
-                  modal.info({
+                  Modal.info({
                     title: 'Quotation Timeline',
                     content: <div style={{ maxHeight: '400px', overflowY: 'auto' }}>{actionList}</div>,
                     width: 600,
@@ -458,9 +550,49 @@ const ClientQuotationsView: React.FC = () => {
         </Text>
       </div>
 
+      {/* Summary Cards */}
+      <UnifiedSummaryCards
+        data={summaryData}
+        loading={loading}
+        style={{ marginBottom: 24 }}
+      />
+
+      {/* Search and Filters */}
+      <UnifiedSearchFilters
+        searchText={searchText}
+        onSearchTextChange={handleSearchChange}
+        searchPlaceholder="Search quotations by title, description, or status..."
+        filters={[
+          {
+            key: 'status',
+            type: 'select',
+            placeholder: 'Filter by status',
+            value: statusFilter,
+            onChange: handleStatusFilterChange,
+            options: [
+              { value: '', label: 'All Status' },
+              { value: 'draft', label: 'Draft' },
+              { value: 'sent', label: 'Sent' },
+              { value: 'accepted', label: 'Accepted' },
+              { value: 'rejected', label: 'Rejected' },
+              { value: 'revision', label: 'Revision' },
+            ],
+          },
+          {
+            key: 'dateRange',
+            type: 'dateRange',
+            value: dateRange ? [dateRange[0]?.format('YYYY-MM-DD') || '', dateRange[1]?.format('YYYY-MM-DD') || ''] : undefined,
+            onChange: handleDateRangeChange,
+          },
+        ]}
+        onRefresh={handleRefresh}
+        onReset={handleResetFilters}
+        loading={loading}
+      />
+
       <UnifiedTable
         columns={columns}
-        dataSource={quotations}
+        dataSource={getFilteredQuotations()}
         loading={loading}
         rowKey="_id"
         pagination={{

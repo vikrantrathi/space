@@ -3,7 +3,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface IEmailTemplate extends Document {
   _id: string;
   name: string;
-  type: string; // 'welcome', 'approval', 'rejection', 'otp', 'password_reset', 'admin_notification', 'profile_submitted', 'reapproval'
+  type: string; // Can be any custom type like 'custom_welcome', 'marketing_promo', etc.
   subject: string;
   htmlContent: string;
   textContent?: string;
@@ -24,7 +24,8 @@ const EmailTemplateSchema: Schema = new Schema({
   type: {
     type: String,
     required: true,
-    enum: ['welcome', 'approval', 'rejection', 'otp', 'password_reset', 'admin_notification', 'profile_submitted', 'reapproval', 'admin_user_verification'],
+    trim: true,
+    // Removed enum validation to allow custom types
   },
   subject: {
     type: String,

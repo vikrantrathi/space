@@ -18,6 +18,9 @@ import {
   theme
 } from 'antd';
 import UnifiedTable from '@/components/shared/UnifiedTable';
+import UnifiedSearchFilters from '@/components/shared/UnifiedSearchFilters';
+import UnifiedSummaryCards from '@/components/shared/UnifiedSummaryCards';
+import { exportUsers } from '@/utils/exportUtils';
 import {
   UserOutlined,
   CheckCircleOutlined,
@@ -32,6 +35,7 @@ import {
 import { useAuth } from '@/lib/auth/auth-context';
 import Link from 'next/link';
 import type { ColumnsType } from 'antd/es/table';
+import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -68,6 +72,13 @@ const AdminUsersView: React.FC = () => {
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [createForm] = Form.useForm();
   const [createLoading, setCreateLoading] = useState(false);
+  
+  // Search and filter states
+  const [searchText, setSearchText] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
+  const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>(null);
+  const [exportLoading, setExportLoading] = useState(false);
 
   // Fetch users
   const fetchUsers = async () => {
@@ -95,17 +106,149 @@ const AdminUsersView: React.FC = () => {
     }
   };
 
-  // Filter users based on active tab
+  // Filter users based on active tab, search text, and filters
   const getFilteredUsers = () => {
+    let filtered = users;
+
+    // Apply tab filter
     if (activeTab === 'pending') {
-      return users.filter(user => user.status === 'pending_approval');
+      filtered = filtered.filter(user => user.status === 'pending_approval');
     }
-    return users;
+
+    // Apply search filter
+    if (searchText) {
+      const searchLower = searchText.toLowerCase();
+      filtered = filtered.filter(user => 
+        user.name.toLowerCase().includes(searchLower) ||
+        user.email.toLowerCase().includes(searchLower) ||
+        user.role.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Apply status filter
+    if (statusFilter) {
+      filtered = filtered.filter(user => user.status === statusFilter);
+    }
+
+    // Apply role filter
+    if (roleFilter) {
+      filtered = filtered.filter(user => user.role === roleFilter);
+    }
+
+    // Apply date range filter
+    if (dateRange && dateRange[0] && dateRange[1]) {
+      const startDate = dateRange[0].startOf('day');
+      const endDate = dateRange[1].endOf('day');
+      filtered = filtered.filter(user => {
+        const createdAt = dayjs(user.createdAt);
+        return createdAt.isAfter(startDate) && createdAt.isBefore(endDate);
+      });
+    }
+
+    return filtered;
   };
 
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  // Export function
+  const handleExport = () => {
+    setExportLoading(true);
+    try {
+      const filteredData = getFilteredUsers();
+      exportUsers(filteredData, `users_${new Date().toISOString().split('T')[0]}.csv`);
+      notification.success({
+        message: 'Export Successful',
+        description: `Exported ${filteredData.length} users to CSV`,
+        duration: 3,
+      });
+    } catch (error) {
+      notification.error({
+        message: 'Export Failed',
+        description: 'Failed to export users. Please try again.',
+        duration: 4,
+      });
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  // Filter handlers
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchText(e.target.value);
+  };
+
+  const handleStatusFilterChange = (value: string | number | [string, string] | undefined) => {
+    setStatusFilter(value as string);
+  };
+
+  const handleRoleFilterChange = (value: string | number | [string, string] | undefined) => {
+    setRoleFilter(value as string);
+  };
+
+  const handleDateRangeChange = (value: string | number | [string, string] | undefined) => {
+    if (Array.isArray(value) && value.length === 2) {
+      const [start, end] = value;
+      setDateRange([
+        start ? dayjs(start) : null,
+        end ? dayjs(end) : null
+      ]);
+    } else {
+      setDateRange(null);
+    }
+  };
+
+  const handleRefresh = () => {
+    fetchUsers();
+  };
+
+  // Handle reset filters
+  const handleResetFilters = () => {
+    setSearchText('');
+    setStatusFilter('');
+    setDateRange(null);
+  };
+
+  // Summary cards data
+  const summaryData = [
+    {
+      title: 'Total Users',
+      value: users.length,
+      icon: <UserOutlined />,
+      color: '#1890ff',
+    },
+    {
+      title: 'Active Users',
+      value: users.filter(u => u.status === 'active').length,
+      icon: <CheckCircleOutlined />,
+      color: '#52c41a',
+    },
+    {
+      title: 'Pending Approval',
+      value: users.filter(u => u.status === 'pending_approval').length,
+      icon: <ClockCircleOutlined />,
+      color: '#faad14',
+    },
+    {
+      title: 'Admins',
+      value: users.filter(u => u.role === 'admin').length,
+      icon: <UserOutlined />,
+      color: '#722ed1',
+    },
+    {
+      title: 'Clients',
+      value: users.filter(u => u.role === 'client').length,
+      icon: <UserOutlined />,
+      color: '#13c2c2',
+    },
+    {
+      title: 'Email Verified',
+      value: users.filter(u => u.emailVerified).length,
+      icon: <CheckCircleOutlined />,
+      color: '#52c41a',
+    },
+  ];
 
   // Handle user actions
   const handleUserAction = async (userId: string, action: string, reason?: string) => {
@@ -435,20 +578,66 @@ const AdminUsersView: React.FC = () => {
         </span>
       ),
       children: (
-        <UnifiedTable<User>
-          columns={columns}
-          dataSource={users}
-          loading={loading}
-          rowKey="_id"
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) =>
-              `${range[0]}-${range[1]} of ${total} users`,
-          }}
-          scroll={{ x: 800 }}
-        />
+        <>
+          {/* Updated search filters - v2 */}
+          <UnifiedSearchFilters
+            searchText={searchText}
+            onSearchTextChange={handleSearchChange}
+            searchPlaceholder="Search users by name, email, or role..."
+            filters={[
+              {
+                key: 'status',
+                type: 'select',
+                placeholder: 'Filter by status',
+                value: statusFilter,
+                onChange: handleStatusFilterChange,
+                options: [
+                  { value: 'active', label: 'Active' },
+                  { value: 'inactive', label: 'Inactive' },
+                  { value: 'pending_approval', label: 'Pending Approval' },
+                  { value: 'pending_verification', label: 'Pending Verification' },
+                  { value: 'rejected', label: 'Rejected' },
+                ],
+              },
+              {
+                key: 'role',
+                type: 'select',
+                placeholder: 'Filter by role',
+                value: roleFilter,
+                onChange: handleRoleFilterChange,
+                options: [
+                  { value: 'admin', label: 'Admin' },
+                  { value: 'client', label: 'Client' },
+                ],
+              },
+              {
+                key: 'dateRange',
+                type: 'dateRange',
+                value: dateRange ? [dateRange[0]?.format('YYYY-MM-DD') || '', dateRange[1]?.format('YYYY-MM-DD') || ''] : undefined,
+                onChange: handleDateRangeChange,
+              },
+            ]}
+            onRefresh={handleRefresh}
+            onExport={handleExport}
+            onReset={handleResetFilters}
+            loading={loading}
+            exportLoading={exportLoading}
+          />
+          <UnifiedTable<User>
+            columns={columns}
+            dataSource={getFilteredUsers()}
+            loading={loading}
+            rowKey="_id"
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+              showQuickJumper: true,
+              showTotal: (total, range) =>
+                `${range[0]}-${range[1]} of ${total} users`,
+            }}
+            scroll={{ x: 800 }}
+          />
+        </>
       ),
     },
     {
@@ -460,21 +649,41 @@ const AdminUsersView: React.FC = () => {
         </span>
       ),
       children: (
-        <UnifiedTable<User>
-          columns={columns}
-          dataSource={getFilteredUsers()}
-          loading={loading}
-          rowKey="_id"
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) =>
-              `${range[0]}-${range[1]} of ${total} pending users`,
-          }}
-          scroll={{ x: 800 }}
-          locale={{ emptyText: 'No users waiting for approval' }}
-        />
+        <>
+          <UnifiedSearchFilters
+            searchText={searchText}
+            onSearchTextChange={handleSearchChange}
+            searchPlaceholder="Search pending users..."
+            filters={[
+              {
+                key: 'dateRange',
+                type: 'dateRange',
+                value: dateRange ? [dateRange[0]?.format('YYYY-MM-DD') || '', dateRange[1]?.format('YYYY-MM-DD') || ''] : undefined,
+                onChange: handleDateRangeChange,
+              },
+            ]}
+            onRefresh={handleRefresh}
+            onExport={handleExport}
+            onReset={handleResetFilters}
+            loading={loading}
+            exportLoading={exportLoading}
+          />
+          <UnifiedTable<User>
+            columns={columns}
+            dataSource={getFilteredUsers()}
+            loading={loading}
+            rowKey="_id"
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+              showQuickJumper: true,
+              showTotal: (total, range) =>
+                `${range[0]}-${range[1]} of ${total} pending users`,
+            }}
+            scroll={{ x: 800 }}
+            locale={{ emptyText: 'No users waiting for approval' }}
+          />
+        </>
       ),
     },
   ];
@@ -500,6 +709,13 @@ const AdminUsersView: React.FC = () => {
           Create User
         </Button>
       </div>
+
+      {/* Summary Cards */}
+      <UnifiedSummaryCards 
+        data={summaryData}
+        loading={loading}
+        style={{ marginBottom: 24 }}
+      />
 
       <Card>
         <Tabs

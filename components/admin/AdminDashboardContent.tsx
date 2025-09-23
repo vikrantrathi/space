@@ -46,7 +46,7 @@ const AdminDashboardContent: React.FC = () => {
   ];
 
   return (
-    <div>
+    <div className="w-full overflow-hidden">
       <Title level={2}>
         <CrownOutlined style={{ marginRight: 8 }} />
         Admin Dashboard

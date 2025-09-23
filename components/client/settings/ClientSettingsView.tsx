@@ -3,29 +3,18 @@
 import React, { useState, useEffect } from 'react';
 import {
   Card, Form, Input, Button, Switch, Typography, Avatar, Upload, Space, Divider, Tabs,
-  App, theme
+  theme
 } from 'antd';
 import {
-  UserOutlined, LockOutlined, SafetyOutlined, UploadOutlined, MailOutlined,
-  CheckCircleOutlined, CloseCircleOutlined
+  UserOutlined, LockOutlined, SafetyOutlined, UploadOutlined, MailOutlined
 } from '@ant-design/icons';
 import { useAuth } from '@/lib/auth/auth-context';
+import { useNotification } from '@/lib/utils/notification';
+import { NOTIFICATION_MESSAGES } from '@/lib/utils/notificationMessages';
 import ThemeModeSelect from '@/components/UI/ThemeModeSelect';
 
 const { Title, Text } = Typography;
 
-interface EmailTemplate {
-  _id: string;
-  name: string;
-  type: string;
-  subject: string;
-  htmlContent: string;
-  textContent?: string;
-  variables: string[];
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
 
 const ClientSettingsView: React.FC = () => {
   const { user, updateUser } = useAuth();
@@ -50,18 +39,14 @@ const ClientSettingsView: React.FC = () => {
     }
   }, [user?.profilePicture, avatarUrl]);
 
-  const { notification } = App.useApp();
+  const notification = useNotification();
 
   const handleAvatarUpload = async (file: File) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        notification.error({
-          message: 'Authentication Required',
-          description: 'Please log in again.',
-          icon: <CloseCircleOutlined style={{ color: '#ff4d4f' }} />,
-          duration: 4,
-        });
+        const msg = NOTIFICATION_MESSAGES.AUTH.LOGIN_FAILED;
+        notification.error(msg.message, msg.description, msg.duration);
         return;
       }
 
@@ -87,21 +72,13 @@ const ClientSettingsView: React.FC = () => {
       // Update global user state
       updateUser({ profilePicture: result.url });
 
-      notification.success({
-        message: 'Avatar Updated',
-        description: 'Your profile picture has been updated successfully.',
-        icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
-        duration: 3,
-      });
+      const msg = NOTIFICATION_MESSAGES.FILE_UPLOAD.LOGO_UPLOAD_SUCCESS;
+      notification.success(msg.message, msg.description, msg.duration);
 
       return result.url;
     } catch (error) {
-      notification.error({
-        message: 'Upload Failed',
-        description: error instanceof Error ? error.message : 'Failed to upload avatar.',
-        icon: <CloseCircleOutlined style={{ color: '#ff4d4f' }} />,
-        duration: 4,
-      });
+      const msg = NOTIFICATION_MESSAGES.GENERAL.ERROR;
+      notification.error(msg.message, msg.description, msg.duration);
       throw error;
     }
   };
@@ -111,12 +88,8 @@ const ClientSettingsView: React.FC = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        notification.error({
-          message: 'Authentication Required',
-          description: 'Please log in again.',
-          icon: <CloseCircleOutlined style={{ color: '#ff4d4f' }} />,
-          duration: 4,
-        });
+        const msg = NOTIFICATION_MESSAGES.AUTH.LOGIN_FAILED;
+        notification.error(msg.message, msg.description, msg.duration);
         return;
       }
 
@@ -134,20 +107,12 @@ const ClientSettingsView: React.FC = () => {
         throw new Error(errorData.error || 'Password change failed');
       }
 
-      notification.success({
-        message: 'Password Changed Successfully',
-        description: 'Your password has been updated.',
-        icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
-        duration: 4,
-      });
+      const msg = NOTIFICATION_MESSAGES.AUTH.PASSWORD_RESET_SUCCESS;
+      notification.success(msg.message, msg.description, msg.duration);
       passwordForm.resetFields();
-    } catch (error) {
-      notification.error({
-        message: 'Failed to Change Password',
-        description: error instanceof Error ? error.message : 'Please try again.',
-        icon: <CloseCircleOutlined style={{ color: '#ff4d4f' }} />,
-        duration: 4,
-      });
+    } catch {
+      const msg = NOTIFICATION_MESSAGES.GENERAL.ERROR;
+      notification.error(msg.message, msg.description, msg.duration);
     } finally {
       setLoading(false);
     }
@@ -158,12 +123,8 @@ const ClientSettingsView: React.FC = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        notification.error({
-          message: 'Authentication Required',
-          description: 'Please log in again.',
-          icon: <CloseCircleOutlined style={{ color: '#ff4d4f' }} />,
-          duration: 4,
-        });
+        const msg = NOTIFICATION_MESSAGES.AUTH.LOGIN_FAILED;
+        notification.error(msg.message, msg.description, msg.duration);
         return;
       }
 
@@ -183,19 +144,11 @@ const ClientSettingsView: React.FC = () => {
 
       await response.json();
 
-      notification.success({
-        message: 'Profile Updated Successfully',
-        description: 'Your profile has been updated.',
-        icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
-        duration: 4,
-      });
-    } catch (error) {
-      notification.error({
-        message: 'Failed to Update Profile',
-        description: error instanceof Error ? error.message : 'Please try again.',
-        icon: <CloseCircleOutlined style={{ color: '#ff4d4f' }} />,
-        duration: 4,
-      });
+      const msg = NOTIFICATION_MESSAGES.GENERAL.SUCCESS || { message: 'Profile Updated Successfully', description: 'Your profile has been updated.', duration: 4 };
+      notification.success(msg.message, msg.description, msg.duration);
+    } catch {
+      const msg = NOTIFICATION_MESSAGES.GENERAL.ERROR;
+      notification.error(msg.message, msg.description, msg.duration);
     } finally {
       setLoading(false);
     }
@@ -205,12 +158,8 @@ const ClientSettingsView: React.FC = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        notification.error({
-          message: 'Authentication Required',
-          description: 'Please log in again to change MFA settings.',
-          icon: <CloseCircleOutlined style={{ color: '#ff4d4f' }} />,
-          duration: 4,
-        });
+        const msg = NOTIFICATION_MESSAGES.AUTH.LOGIN_FAILED;
+        notification.error(msg.message, msg.description, msg.duration);
         return;
       }
 
@@ -231,20 +180,12 @@ const ClientSettingsView: React.FC = () => {
       setMfaEnabled(checked);
       // Update the global auth context
       updateUser({ mfaEnabled: checked });
-      notification.success({
-        message: `MFA ${checked ? 'Enabled' : 'Disabled'} Successfully`,
-        description: `Multi-factor authentication has been ${checked ? 'enabled' : 'disabled'}.${checked ? ' You will now need to verify with OTP when logging in.' : ' You will no longer need OTP verification for login.'}`,
-        icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
-        duration: 6,
-      });
+      const msg = checked ? NOTIFICATION_MESSAGES.AUTH.MFA_ENABLED : NOTIFICATION_MESSAGES.AUTH.MFA_DISABLED;
+      notification.success(msg.message, msg.description, msg.duration);
     } catch (error) {
       console.error('MFA toggle error:', error);
-      notification.error({
-        message: 'Failed to Toggle MFA',
-        description: error instanceof Error ? error.message : 'Please try again.',
-        icon: <CloseCircleOutlined style={{ color: '#ff4d4f' }} />,
-        duration: 4,
-      });
+      const msg = NOTIFICATION_MESSAGES.GENERAL.ERROR;
+      notification.error(msg.message, msg.description, msg.duration);
     }
   };
 
@@ -273,22 +214,14 @@ const ClientSettingsView: React.FC = () => {
                   beforeUpload={(file) => {
                     const isImage = file.type.startsWith('image/');
                     if (!isImage) {
-                      notification.error({
-                        message: 'Invalid File Type',
-                        description: 'Please upload an image file.',
-                        icon: <CloseCircleOutlined style={{ color: '#ff4d4f' }} />,
-                        duration: 3,
-                      });
+                      const msg = NOTIFICATION_MESSAGES.FILE_UPLOAD.INVALID_TYPE;
+                      notification.error(msg.message, msg.description, msg.duration);
                       return false;
                     }
                     const isLt5M = file.size / 1024 / 1024 < 5;
                     if (!isLt5M) {
-                      notification.error({
-                        message: 'File Too Large',
-                        description: 'Image must be smaller than 5MB.',
-                        icon: <CloseCircleOutlined style={{ color: '#ff4d4f' }} />,
-                        duration: 3,
-                      });
+                      const msg = NOTIFICATION_MESSAGES.FILE_UPLOAD.FILE_TOO_LARGE;
+                      notification.error(msg.message, msg.description, msg.duration);
                       return false;
                     }
                     handleAvatarUpload(file);

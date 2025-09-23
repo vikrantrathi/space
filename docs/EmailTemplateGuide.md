@@ -25,8 +25,8 @@ type: {
   required: true,
   enum: [
     // Existing types...
-    'welcome', 'approval', 'rejection', 'otp', 'password_reset',
-    'admin_notification', 'profile_submitted', 'reapproval',
+    'auth_welcome', 'auth_approval', 'auth_rejection', 'auth_otp', 'auth_password_reset',
+    'auth_admin_notification', 'auth_profile_submitted', 'auth_reapproval', 'auth_admin_user_verification',
     // Add your new type here
     'your_new_template_type'
   ],
@@ -119,8 +119,8 @@ try {
 ## 📝 Common Template Types
 
 ### Authentication
-- `welcome` - User registration confirmation
-- `password_reset` - Password reset instructions
+- `auth_welcome` - User registration confirmation
+- `auth_password_reset` - Password reset instructions
 - `email_verification` - Email verification
 - `account_locked` - Account security alert
 

@@ -10,17 +10,16 @@ import {
   Space,
   Card,
   Typography,
-  App,
   Select,
   Spin,
   Divider,
   Upload,
   message
 } from 'antd';
+import { useNotification } from '@/lib/utils/notification';
+import { NOTIFICATION_MESSAGES } from '@/lib/utils/notificationMessages';
 import {
   ArrowLeftOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
   EditOutlined,
   UploadOutlined,
   SaveOutlined
@@ -80,13 +79,13 @@ interface StandardContentFormData {
 }
 
 const StandardContentPage: React.FC = () => {
-  const { notification } = App.useApp();
   const router = useRouter();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [logoKey, setLogoKey] = useState(0); // Force re-render when logo changes
   const [avatarKeys, setAvatarKeys] = useState<Record<number, number>>({}); // Force re-render when avatars change
+  const notification = useNotification();
 
   const fetchStandardContent = useCallback(async () => {
     setFetchLoading(true);
@@ -94,12 +93,8 @@ const StandardContentPage: React.FC = () => {
       const token = localStorage.getItem('token');
 
       if (!token) {
-        notification.error({
-          message: 'Authentication Error',
-          description: 'No authentication token found. Please log in again.',
-          icon: <CloseCircleOutlined style={{ color: '#ff4d4f' }} />,
-          duration: 4,
-        });
+        const msg = NOTIFICATION_MESSAGES.AUTH.AUTHENTICATION_ERROR;
+        notification.error(msg.message, msg.description, msg.duration);
         return;
       }
 
@@ -141,12 +136,8 @@ const StandardContentPage: React.FC = () => {
         });
       }
     } catch {
-      notification.error({
-        message: 'Error Loading Standard Content',
-        description: 'Network error occurred while loading standard content.',
-        icon: <CloseCircleOutlined style={{ color: '#ff4d4f' }} />,
-        duration: 4,
-      });
+        const msg = NOTIFICATION_MESSAGES.STANDARD_CONTENT.LOAD_ERROR;
+        notification.error(msg.message, msg.description, msg.duration);
     } finally {
       setFetchLoading(false);
     }
@@ -164,12 +155,8 @@ const StandardContentPage: React.FC = () => {
       const token = localStorage.getItem('token');
 
       if (!token) {
-        notification.error({
-          message: 'Authentication Error',
-          description: 'No authentication token found. Please log in again.',
-          icon: <CloseCircleOutlined style={{ color: '#ff4d4f' }} />,
-          duration: 4,
-        });
+        const msg = NOTIFICATION_MESSAGES.AUTH.AUTHENTICATION_ERROR;
+        notification.error(msg.message, msg.description, msg.duration);
         setLoading(false);
         return;
       }
@@ -192,28 +179,16 @@ const StandardContentPage: React.FC = () => {
       });
 
       if (response.ok) {
-        notification.success({
-          message: 'Standard Content Updated',
-          description: 'Standard content has been updated successfully.',
-          icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
-          duration: 4,
-        });
+        const msg = NOTIFICATION_MESSAGES.STANDARD_CONTENT.UPDATE_SUCCESS;
+        notification.success(msg.message, msg.description, msg.duration);
       } else {
         const error = await response.json();
-        notification.error({
-          message: 'Failed to Update Standard Content',
-          description: error.error || 'Unable to update standard content.',
-          icon: <CloseCircleOutlined style={{ color: '#ff4d4f' }} />,
-          duration: 4,
-        });
+        const msg = NOTIFICATION_MESSAGES.STANDARD_CONTENT.UPDATE_ERROR;
+        notification.error(msg.message, error.error || msg.description, msg.duration);
       }
     } catch {
-      notification.error({
-        message: 'Error Updating Standard Content',
-        description: 'Network error occurred. Please try again.',
-        icon: <CloseCircleOutlined style={{ color: '#ff4d4f' }} />,
-        duration: 4,
-      });
+      const msg = NOTIFICATION_MESSAGES.STANDARD_CONTENT.UPDATE_NETWORK_ERROR;
+      notification.error(msg.message, msg.description, msg.duration);
     } finally {
       setLoading(false);
     }
@@ -379,12 +354,14 @@ const StandardContentPage: React.FC = () => {
                         beforeUpload={(file) => {
                           const isImage = file.type.startsWith('image/');
                           if (!isImage) {
-                            notification.error({ message: 'Only image files are allowed' });
+                            const msg = NOTIFICATION_MESSAGES.FILE_UPLOAD.INVALID_TYPE;
+                            notification.error(msg.message, msg.description, msg.duration);
                             return false;
                           }
                           const isLt10M = file.size / 1024 / 1024 < 10;
                           if (!isLt10M) {
-                            notification.error({ message: 'Image must be smaller than 10MB' });
+                            const msg = NOTIFICATION_MESSAGES.FILE_UPLOAD.FILE_TOO_LARGE;
+                            notification.error(msg.message, msg.description, msg.duration);
                             return false;
                           }
                           return true;
@@ -398,18 +375,18 @@ const StandardContentPage: React.FC = () => {
                               const current = form.getFieldValue('companyDetails') || {};
                               form.setFieldsValue({ companyDetails: { ...current, logo: url } });
                               setLogoKey(prev => prev + 1); // Force re-render
-                              notification.success({ message: 'Logo uploaded successfully' });
+                              const msg = NOTIFICATION_MESSAGES.FILE_UPLOAD.LOGO_UPLOAD_SUCCESS;
+                              notification.success(msg.message, msg.description, msg.duration);
                             } else {
                               // Debug log removed
-                              notification.warning({ message: 'Upload succeeded, but no URL returned' });
+                              const msg = NOTIFICATION_MESSAGES.FILE_UPLOAD.UPLOAD_WARNING;
+                              notification.warning(msg.message, msg.description, msg.duration);
                             }
                           } else if (info.file.status === 'error') {
                             const res = info.file.response;
                             // Debug log removed
-                            notification.error({
-                              message: 'Logo upload failed',
-                              description: res?.error || 'Server returned an error (400)'
-                            });
+                            const msg = NOTIFICATION_MESSAGES.FILE_UPLOAD.LOGO_UPLOAD_ERROR;
+                            notification.error(msg.message, res?.error || msg.description, msg.duration);
                           }
                         }}
                       >
@@ -435,12 +412,14 @@ const StandardContentPage: React.FC = () => {
                       beforeUpload={(file) => {
                         const isImage = file.type.startsWith('image/');
                         if (!isImage) {
-                          notification.error({ message: 'Only image files are allowed' });
+                          const msg = NOTIFICATION_MESSAGES.FILE_UPLOAD.INVALID_TYPE;
+                          notification.error(msg.message, msg.description, msg.duration);
                           return false;
                         }
                         const isLt10M = file.size / 1024 / 1024 < 10;
                         if (!isLt10M) {
-                          notification.error({ message: 'Image must be smaller than 10MB' });
+                          const msg = NOTIFICATION_MESSAGES.FILE_UPLOAD.FILE_TOO_LARGE;
+                          notification.error(msg.message, msg.description, msg.duration);
                           return false;
                         }
                         return true;
@@ -454,18 +433,18 @@ const StandardContentPage: React.FC = () => {
                             const current = form.getFieldValue('companyDetails') || {};
                             form.setFieldsValue({ companyDetails: { ...current, logo: url } });
                             setLogoKey(prev => prev + 1); // Force re-render
-                            notification.success({ message: 'Logo uploaded successfully' });
+                            const msg = NOTIFICATION_MESSAGES.FILE_UPLOAD.LOGO_UPLOAD_SUCCESS;
+                            notification.success(msg.message, msg.description, msg.duration);
                           } else {
                             // Debug log removed
-                            notification.warning({ message: 'Upload succeeded, but no URL returned' });
+                            const msg = NOTIFICATION_MESSAGES.FILE_UPLOAD.UPLOAD_WARNING;
+                            notification.warning(msg.message, msg.description, msg.duration);
                           }
                         } else if (info.file.status === 'error') {
                           const res = info.file.response;
                           // Debug log removed
-                          notification.error({
-                            message: 'Logo upload failed',
-                            description: res?.error || 'Server returned an error (400)'
-                          });
+                          const msg = NOTIFICATION_MESSAGES.FILE_UPLOAD.LOGO_UPLOAD_ERROR;
+                          notification.error(msg.message, res?.error || msg.description, msg.duration);
                         }
                       }}
                     >
@@ -608,12 +587,14 @@ const StandardContentPage: React.FC = () => {
                                   beforeUpload={(file) => {
                                     const isImage = file.type.startsWith('image/');
                                     if (!isImage) {
-                                      notification.error({ message: 'Only image files are allowed' });
+                                      const msg = NOTIFICATION_MESSAGES.FILE_UPLOAD.INVALID_TYPE;
+                            notification.error(msg.message, msg.description, msg.duration);
                                       return false;
                                     }
                                     const isLt10M = file.size / 1024 / 1024 < 10;
                                     if (!isLt10M) {
-                                      notification.error({ message: 'Image must be smaller than 10MB!' });
+                                      const msg = NOTIFICATION_MESSAGES.FILE_UPLOAD.FILE_TOO_LARGE;
+                                      notification.error(msg.message, msg.description, msg.duration);
                                       return false;
                                     }
                                     return true;
@@ -625,13 +606,16 @@ const StandardContentPage: React.FC = () => {
                                       if (url) {
                                         form.setFieldValue(['testimonials', name, 'avatar'], url);
                                         setAvatarKeys(prev => ({ ...prev, [name]: (prev[name] || 0) + 1 }));
-                                        notification.success({ message: 'Avatar uploaded successfully' });
+                                        const msg = NOTIFICATION_MESSAGES.FILE_UPLOAD.AVATAR_UPLOAD_SUCCESS;
+                                        notification.success(msg.message, msg.description, msg.duration);
                                       } else {
                                         // Debug log removed
-                                        notification.warning({ message: 'Upload succeeded, but no URL returned' });
+                                        const msg = NOTIFICATION_MESSAGES.FILE_UPLOAD.UPLOAD_WARNING;
+                              notification.warning(msg.message, msg.description, msg.duration);
                                       }
                                     } else if (info.file.status === 'error') {
-                                      notification.error({ message: 'Upload failed' });
+                                      const msg = NOTIFICATION_MESSAGES.FILE_UPLOAD.UPLOAD_ERROR;
+                                      notification.error(msg.message, msg.description, msg.duration);
                                     }
                                   }}
                                 >
@@ -657,12 +641,14 @@ const StandardContentPage: React.FC = () => {
                                 beforeUpload={(file) => {
                                   const isImage = file.type.startsWith('image/');
                                   if (!isImage) {
-                                    notification.error({ message: 'Only image files are allowed' });
+                                    const msg = NOTIFICATION_MESSAGES.FILE_UPLOAD.INVALID_TYPE;
+                            notification.error(msg.message, msg.description, msg.duration);
                                     return false;
                                   }
                                   const isLt10M = file.size / 1024 / 1024 < 10;
                                   if (!isLt10M) {
-                                    notification.error({ message: 'Image must be smaller than 10MB!' });
+                                    const msg = NOTIFICATION_MESSAGES.FILE_UPLOAD.FILE_TOO_LARGE;
+                                    notification.error(msg.message, msg.description, msg.duration);
                                     return false;
                                   }
                                   return true;
@@ -674,13 +660,16 @@ const StandardContentPage: React.FC = () => {
                                     if (url) {
                                       form.setFieldValue(['testimonials', name, 'avatar'], url);
                                       setAvatarKeys(prev => ({ ...prev, [name]: (prev[name] || 0) + 1 }));
-                                      notification.success({ message: 'Avatar uploaded successfully' });
+                                      const msg = NOTIFICATION_MESSAGES.FILE_UPLOAD.AVATAR_UPLOAD_SUCCESS;
+                                      notification.success(msg.message, msg.description, msg.duration);
                                     } else {
                                       // Debug log removed
-                                      notification.warning({ message: 'Upload succeeded, but no URL returned' });
+                                      const msg = NOTIFICATION_MESSAGES.FILE_UPLOAD.UPLOAD_WARNING;
+                              notification.warning(msg.message, msg.description, msg.duration);
                                     }
                                   } else if (info.file.status === 'error') {
-                                    notification.error({ message: 'Upload failed' });
+                                    const msg = NOTIFICATION_MESSAGES.FILE_UPLOAD.UPLOAD_ERROR;
+                                    notification.error(msg.message, msg.description, msg.duration);
                                   }
                                 }}
                               >
@@ -744,12 +733,14 @@ const StandardContentPage: React.FC = () => {
                                     beforeUpload={(file) => {
                                       const isImage = file.type.startsWith('image/');
                                       if (!isImage) {
-                                        notification.error({ message: 'Only image files are allowed' });
+                                        const msg = NOTIFICATION_MESSAGES.FILE_UPLOAD.INVALID_TYPE;
+                            notification.error(msg.message, msg.description, msg.duration);
                                         return false;
                                       }
                                       const isLt10M = file.size / 1024 / 1024 < 10;
                                       if (!isLt10M) {
-                                        notification.error({ message: 'Image must be smaller than 10MB' });
+                                        const msg = NOTIFICATION_MESSAGES.FILE_UPLOAD.FILE_TOO_LARGE;
+                            notification.error(msg.message, msg.description, msg.duration);
                                         return false;
                                       }
                                       return true;
@@ -763,16 +754,16 @@ const StandardContentPage: React.FC = () => {
                                           const updatedPreviousWork = [...currentPreviousWork];
                                           updatedPreviousWork[name] = { ...updatedPreviousWork[name], image: url };
                                           form.setFieldsValue({ previousWork: updatedPreviousWork });
-                                          notification.success({ message: 'Image uploaded successfully' });
+                                          const msg = NOTIFICATION_MESSAGES.FILE_UPLOAD.IMAGE_UPLOAD_SUCCESS;
+                                          notification.success(msg.message, msg.description, msg.duration);
                                         } else {
-                                          notification.warning({ message: 'Upload succeeded, but no URL returned' });
+                                          const msg = NOTIFICATION_MESSAGES.FILE_UPLOAD.UPLOAD_WARNING;
+                              notification.warning(msg.message, msg.description, msg.duration);
                                         }
                                       } else if (info.file.status === 'error') {
                                         const res = info.file.response;
-                                        notification.error({
-                                          message: 'Image upload failed',
-                                          description: res?.error || 'Server returned an error (400)'
-                                        });
+                                        const msg = NOTIFICATION_MESSAGES.FILE_UPLOAD.IMAGE_UPLOAD_ERROR;
+                                        notification.error(msg.message, res?.error || msg.description, msg.duration);
                                       }
                                     }}
                                   >
@@ -799,12 +790,14 @@ const StandardContentPage: React.FC = () => {
                                   beforeUpload={(file) => {
                                     const isImage = file.type.startsWith('image/');
                                     if (!isImage) {
-                                      notification.error({ message: 'Only image files are allowed' });
+                                      const msg = NOTIFICATION_MESSAGES.FILE_UPLOAD.INVALID_TYPE;
+                            notification.error(msg.message, msg.description, msg.duration);
                                       return false;
                                     }
                                     const isLt10M = file.size / 1024 / 1024 < 10;
                                     if (!isLt10M) {
-                                      notification.error({ message: 'Image must be smaller than 10MB' });
+                                      const msg = NOTIFICATION_MESSAGES.FILE_UPLOAD.FILE_TOO_LARGE;
+                            notification.error(msg.message, msg.description, msg.duration);
                                       return false;
                                     }
                                     return true;
@@ -818,16 +811,16 @@ const StandardContentPage: React.FC = () => {
                                         const updatedPreviousWork = [...currentPreviousWork];
                                         updatedPreviousWork[name] = { ...updatedPreviousWork[name], image: url };
                                         form.setFieldsValue({ previousWork: updatedPreviousWork });
-                                        notification.success({ message: 'Image uploaded successfully' });
+                                        const msg = NOTIFICATION_MESSAGES.FILE_UPLOAD.IMAGE_UPLOAD_SUCCESS;
+                                        notification.success(msg.message, msg.description, msg.duration);
                                       } else {
-                                        notification.warning({ message: 'Upload succeeded, but no URL returned' });
+                                        const msg = NOTIFICATION_MESSAGES.FILE_UPLOAD.UPLOAD_WARNING;
+                              notification.warning(msg.message, msg.description, msg.duration);
                                       }
                                     } else if (info.file.status === 'error') {
                                       const res = info.file.response;
-                                      notification.error({
-                                        message: 'Image upload failed',
-                                        description: res?.error || 'Server returned an error (400)'
-                                      });
+                                      const msg = NOTIFICATION_MESSAGES.FILE_UPLOAD.IMAGE_UPLOAD_ERROR;
+                                      notification.error(msg.message, res?.error || msg.description, msg.duration);
                                     }
                                   }}
                                 >

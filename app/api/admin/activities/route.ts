@@ -47,8 +47,9 @@ export async function GET(request: NextRequest) {
     if (search) {
       query.$or = [
         { description: { $regex: search, $options: 'i' } },
-        { userEmail: { $regex: search, $options: 'i' } }
-      ];
+        { userEmail: { $regex: search, $options: 'i' } },
+        { userId: { $regex: search, $options: 'i' } }
+      ] as Array<{ [key: string]: { $regex: string; $options: string } }>;
     }
 
     // Calculate skip for pagination
